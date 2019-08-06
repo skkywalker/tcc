@@ -13,12 +13,17 @@ class Map:
             if ((position[0]+i >= 0 and position[0]+i < self.graph.shape[0]) and 
                 (position[1]+j >= 0 and position[1]+j < self.graph.shape[1])):
                 neighbors.append((position[0]+i,position[1]+j))
-        return neighbors              
+        return neighbors
 
-pos_start = (1,1)
-size = (2,3)
+    def make_wall(self,position):
+        for pos in position:
+            self.graph[pos] = 0
+
+pos_start = (1,0)
+size = (3,4)
 graph = Map(start=pos_start,size=size)
-
+graph.make_wall([(0,1),(1,1),(1,2)])
+print(graph.graph)
 # Start of Redblob algorithm
 
 frontier = queue.Queue()
