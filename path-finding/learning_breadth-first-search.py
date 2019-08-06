@@ -2,9 +2,10 @@ import queue
 import numpy as np
 
 class Map:
-    def __init__(self,size,start):
+    def __init__(self,size,start,finish):
         self.graph = np.ones(shape=size, dtype=np.int)
         self.graph[start] = 2
+        self.graph[finish] = 3
         print(self.graph)
 
     def get_neighbors(self,position):
@@ -20,10 +21,11 @@ class Map:
             self.graph[pos] = 0
 
 pos_start = (1,0)
+finish = (0,2)
 size = (3,4)
-graph = Map(start=pos_start,size=size)
+graph = Map(start=pos_start,size=size,finish=finish)
 graph.make_wall([(0,1),(1,1),(1,2)])
-print(graph.graph)
+
 # Start of Redblob algorithm
 
 frontier = queue.Queue()
