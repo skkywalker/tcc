@@ -19,3 +19,21 @@ class Map:
 pos_start = (1,1)
 size = (5,3)
 graph = Map(start=pos_start,size=size)
+
+# Start of Redblob algorithm
+
+frontier = queue.Queue()
+frontier.put(pos_start)
+visited = {}
+visited[pos_start] = True
+
+while not frontier.empty():
+    current = frontier.get()
+    for next in graph.get_neighbors(current):
+        if next not in visited:
+            frontier.put(next)
+            visited[next] = True
+
+# End of Redblob algorithm
+
+print(visited)
