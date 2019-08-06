@@ -42,6 +42,14 @@ while not frontier.empty():
             frontier.put(next)
             came_from[next] = current
 
+current = finish
+path = []
+while current != pos_start:
+    path.append(current)
+    current = came_from[current]
+path.append(pos_start)
+path.reverse()
+
 # End of Redblob algorithm
 
-print(came_from)
+print(path)
