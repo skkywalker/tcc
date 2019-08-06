@@ -3,9 +3,8 @@ import numpy as np
 
 class Map:
     def __init__(self,size,start):
-        self.size = size
-        self.graph = np.ones(shape=(self.size[0],self.size[1]), dtype=np.int)
-        self.graph[start[0]][start[1]] = 0
+        self.graph = np.ones(shape=size, dtype=np.int)
+        self.graph[start] = 2
         print(self.graph)
 
     def get_neighbors(self,position):
