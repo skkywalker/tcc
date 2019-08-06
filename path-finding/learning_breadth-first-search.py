@@ -17,23 +17,23 @@ class Map:
         return neighbors              
 
 pos_start = (1,1)
-size = (5,3)
+size = (2,3)
 graph = Map(start=pos_start,size=size)
 
 # Start of Redblob algorithm
 
 frontier = queue.Queue()
 frontier.put(pos_start)
-visited = {}
-visited[pos_start] = True
+came_from = {}
+came_from[pos_start] = None
 
 while not frontier.empty():
     current = frontier.get()
     for next in graph.get_neighbors(current):
-        if next not in visited:
+        if next not in came_from:
             frontier.put(next)
-            visited[next] = True
+            came_from[next] = current
 
 # End of Redblob algorithm
 
-print(visited)
+print(came_from)
