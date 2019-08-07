@@ -37,6 +37,10 @@ came_from[pos_start] = None
 
 while not frontier.empty():
     current = frontier.get()
+    
+    if current == finish:
+        break
+    
     for next in graph.get_neighbors(current):
         if next not in came_from:
             frontier.put(next)
