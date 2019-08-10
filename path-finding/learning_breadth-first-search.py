@@ -36,4 +36,4 @@ path.reverse()
 
 # End of Redblob algorithm
 
-print(path)
+graph.mk_image(path)
