@@ -1,12 +1,28 @@
 import queue
 import numpy as np
 from map import Map
+import cv2
 
-pos_start = (1,0)
-finish = (0,2)
-size = (3,4)
+im_map = cv2.imread('test-map.png', cv2.IMREAD_COLOR)
+
+pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))  
+pos_start = cv2.findNonZero(pos_start)
+pos_start = (pos_start[0][0][0],pos_start[0][0][1])
+finish = cv2.inRange(im_map, np.array([255,0,0]), np.array([255,0,0]))  
+finish = cv2.findNonZero(finish)
+finish = (finish[0][0][0],finish[0][0][1])
+size = (640,480)
+
 graph = Map(start=pos_start,size=size,finish=finish)
-graph.make_wall([(0,1),(1,1),(1,2)])
+
+walls = cv2.inRange(im_map, np.array([0,0,255]), np.array([0,0,255]))  
+walls = cv2.findNonZero(walls)
+
+for point in walls:
+    point = (point[0][0],point[0][1])
+    graph.make_wall([point])
+
+cv2.imshow('image',im_map)
 
 # Start of Redblob algorithm
 
@@ -36,4 +52,6 @@ path.reverse()
 
 # End of Redblob algorithm
 
-graph.mk_image(path)
+print("end")
+cv2.waitKey(0)
+cv2.destroyAllWindows()

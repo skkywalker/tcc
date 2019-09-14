@@ -9,7 +9,6 @@ class Map:
         self.graph = np.ones(shape=size, dtype=np.int)
         self.graph[start] = 2
         self.graph[finish] = 3
-        print(self.graph)
 
     def get_neighbors(self,position):
         neighbors = list()
