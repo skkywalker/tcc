@@ -15,14 +15,12 @@ size = (640,480)
 
 graph = Map(start=pos_start,size=size,finish=finish)
 
-walls = cv2.inRange(im_map, np.array([0,0,255]), np.array([0,0,255]))  
+walls = cv2.inRange(im_map, np.array([0,0,50]), np.array([0,0,255]))  
 walls = cv2.findNonZero(walls)
 
 for point in walls:
     point = (point[0][0],point[0][1])
     graph.make_wall([point])
-
-cv2.imshow('image',im_map)
 
 # Start of Redblob algorithm
 
@@ -50,7 +48,12 @@ while current != pos_start:
 path.append(pos_start)
 path.reverse()
 
+for i in path:
+    im_map[(i[1], i[0])] = [0,0,0]
+
 # End of Redblob algorithm
+
+cv2.imshow('path chosen', im_map)
 
 print("end")
 cv2.waitKey(0)
