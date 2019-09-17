@@ -11,7 +11,7 @@ pos_start = (pos_start[0][0][0],pos_start[0][0][1])
 finish = cv2.inRange(im_map, np.array([255,0,0]), np.array([255,0,0]))  
 finish = cv2.findNonZero(finish)
 finish = (finish[0][0][0],finish[0][0][1])
-size = (640,480)
+size = (len(im_map[0]),len(im_map))
 
 graph = Map(start=pos_start,size=size,finish=finish)
 
