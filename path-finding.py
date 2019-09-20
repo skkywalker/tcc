@@ -1,9 +1,9 @@
 import queue
 import numpy as np
-from map import Map
+from libs.map import Map
 import cv2
 
-im_map = cv2.imread('test-map.png', cv2.IMREAD_COLOR)
+im_map = cv2.imread('src/test-map.png', cv2.IMREAD_COLOR)
 
 dilation_kernel = np.ones((11,11), np.uint8) 
 
