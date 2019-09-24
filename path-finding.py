@@ -2,6 +2,9 @@ import queue
 import numpy as np
 from libs.map import Map
 import cv2
+import time
+
+now = time.time()
 
 im_map = cv2.imread('src/test-map.png', cv2.IMREAD_COLOR)
 
@@ -24,6 +27,9 @@ walls = cv2.findNonZero(walls)
 for point in walls:
     point = (point[0][0],point[0][1])
     graph.make_wall([point])
+
+print("Map setup:", round(time.time() - now, 2), "sec")
+now = time.time()
 
 # Start of Redblob algorithm
 
@@ -55,6 +61,8 @@ for i in path:
     im_map[(i[1], i[0])] = [0,0,0]
 
 # End of Redblob algorithm
+
+print("Algorythm:", round(time.time() - now, 2), "sec")
 
 cv2.imshow('path chosen', im_map)
 
