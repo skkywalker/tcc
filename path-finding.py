@@ -5,6 +5,8 @@ import libs.tools as tools
 import cv2
 import time
 
+print("Starting program...")
+print("Setting up map from image...")
 now = time.time()
 
 im_map = cv2.imread('src/test-map.png', cv2.IMREAD_COLOR)
@@ -28,7 +30,8 @@ for point in walls:
     point = (point[0][0],point[0][1])
     graph.make_wall([point])
 
-print("Map setup:", round(time.time() - now, 2), "sec")
+print("Map setup! Time:", round(time.time() - now, 2), "sec")
+print("Initializing path-finding algorithm...")
 now = time.time()
 
 # Start of Redblob algorithm
@@ -57,15 +60,16 @@ while current != pos_start:
 path.append(pos_start)
 path.reverse()
 
+print("Path found! Time:", round(time.time() - now, 2), "sec")
+
+print("Preparing to show map...")
 for i in path:
     im_map[(i[1], i[0])] = [0,0,0]
 
 # End of Redblob algorithm
 
-print("Algorythm:", round(time.time() - now, 2), "sec")
-
 cv2.imshow('path chosen', im_map)
 
-print("end")
+print("Done!")
 cv2.waitKey(0)
 cv2.destroyAllWindows()
