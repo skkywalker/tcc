@@ -1,6 +1,7 @@
 import queue
 import numpy as np
 from libs.map import Map
+import libs.tools as tools
 import cv2
 import time
 
@@ -10,18 +11,17 @@ im_map = cv2.imread('src/test-map.png', cv2.IMREAD_COLOR)
 
 dilation_kernel = np.ones((11,11), np.uint8) 
 
-pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))  
-pos_start = cv2.findNonZero(pos_start)
-pos_start = (pos_start[0][0][0],pos_start[0][0][1])
+pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))
+pos_start = tools.get_center(pos_start)
 finish = cv2.inRange(im_map, np.array([255,0,0]), np.array([255,0,0]))  
-finish = cv2.findNonZero(finish)
-finish = (finish[0][0][0],finish[0][0][1])
+finish = tools.get_center(finish)
 size = (len(im_map[0]),len(im_map))
 
 graph = Map(start=pos_start,size=size,finish=finish)
 
 walls = cv2.inRange(im_map, np.array([0,0,50]), np.array([0,0,255]))
-walls = cv2.dilate(walls, dilation_kernel, iterations=1)
+walls = cv2.dilate(walls, dilation_kernel, iterations=3)
+cv2.imshow('walls', walls)
 walls = cv2.findNonZero(walls)
 
 for point in walls:
