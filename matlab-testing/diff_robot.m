@@ -1,10 +1,14 @@
 clear all
 close all
 
+% Reference to Real World
+real_size = 1.2;
+
 % Load map
-map = imread('../src/test-map.png');
+map = imread('../src/test3.png');
 map_size = size(map);
 %map = imresize(map, [map_size(1) map_size(2)]/2);
+relation_real_img = map_size(2)/real_size; % pixels per meter
 
 walls = createMask(map,100,255,0,0,0,0);
 start_blob = createMask(map,0,0,100,255,0,0);
@@ -17,16 +21,16 @@ finish = fix(cat(1,finish.Centroid));
 finish = [finish(1) map_size(1)-finish(2)];
 
 % Define Robot
-robot = differentialDriveKinematics("TrackWidth", 10, "VehicleInputs", "VehicleSpeedHeadingRate");
+robot = differentialDriveKinematics("TrackWidth", 0.1, "WheelRadius", 0.065, "VehicleInputs", "VehicleSpeedHeadingRate");
 
 % Path finding
-grid = binaryOccupancyMap(walls);
+grid = binaryOccupancyMap(walls,relation_real_img);
 mapInflated = copy(grid);
 inflate(mapInflated, robot.TrackWidth/2);
 prm = robotics.PRM(mapInflated);
 prm.NumNodes = 200;
-prm.ConnectionDistance = 100;
-path = findpath(prm, start, finish);
+prm.ConnectionDistance = 1;
+path = findpath(prm, start/relation_real_img, finish/relation_real_img);
 
 robotInitialLocation = path(1,:);
 robotGoal = path(end,:);
@@ -37,10 +41,10 @@ robotCurrentPose = [robotInitialLocation initialOrientation]';
 
 controller = controllerPurePursuit;
 controller.Waypoints = path;
-controller.DesiredLinearVelocity = 2;
-controller.MaxAngularVelocity = 4;
-controller.LookaheadDistance = 0.3;
-goalRadius = 5;
+controller.DesiredLinearVelocity = 0.1;
+controller.MaxAngularVelocity = 5;
+controller.LookaheadDistance = 0.1;
+goalRadius = 0.01;
 distanceToGoal = norm(robotInitialLocation - robotGoal);
 
 % Initialize the simulation loop
@@ -51,7 +55,7 @@ vizRate = rateControl(1/sampleTime);
 figure
 
 % Determine vehicle frame size to most closely represent vehicle with plotTransforms
-frameSize = robot.TrackWidth/0.8;
+frameSize = robot.TrackWidth;
 
 while( distanceToGoal > goalRadius )
     
@@ -81,8 +85,8 @@ while( distanceToGoal > goalRadius )
     plotRot = axang2quat([0 0 1 robotCurrentPose(3)]);
     plotTransforms(plotTrVec', plotRot, "MeshFilePath", "groundvehicle.stl", "Parent", gca, "View","2D", "FrameSize", frameSize);
     light;
-    xlim([0 640])
-    ylim([0 480])
+    xlim([0 real_size])
+    ylim([0 real_size*(map_size(1)/map_size(2))])
     
     waitfor(vizRate);
 end
