@@ -26,7 +26,7 @@ robot = differentialDriveKinematics("TrackWidth", 0.1, "WheelRadius", 0.065, "Ve
 % Path finding
 grid = binaryOccupancyMap(walls,relation_real_img);
 mapInflated = copy(grid);
-inflate(mapInflated, robot.TrackWidth/2);
+inflate(mapInflated, 0.7*robot.TrackWidth);
 prm = robotics.PRM(mapInflated);
 prm.NumNodes = 200;
 prm.ConnectionDistance = 1;
@@ -41,9 +41,9 @@ robotCurrentPose = [robotInitialLocation initialOrientation]';
 
 controller = controllerPurePursuit;
 controller.Waypoints = path;
-controller.DesiredLinearVelocity = 0.1;
-controller.MaxAngularVelocity = 5;
-controller.LookaheadDistance = 0.1;
+controller.DesiredLinearVelocity = 0.08;
+controller.MaxAngularVelocity = 1;
+controller.LookaheadDistance = 0.12;
 goalRadius = 0.01;
 distanceToGoal = norm(robotInitialLocation - robotGoal);
 
@@ -60,11 +60,15 @@ frameSize = robot.TrackWidth;
 while( distanceToGoal > goalRadius )
     
     % Compute the controller outputs, i.e., the inputs to the robot
-    [v, omega] = controller(robotCurrentPose);
+    [v, omega, lookahead] = controller(robotCurrentPose);
+
+    dist = pdist([lookahead;robotCurrentPose(1:2)']);
     
     % Get the robot's velocity using controller inputs
     vel = derivative(robot, robotCurrentPose, [v omega]);
     
+    vel = vel*dist/controller.LookaheadDistance;
+
     % Update the current pose
     robotCurrentPose = robotCurrentPose + vel*sampleTime;
     
@@ -76,10 +80,13 @@ while( distanceToGoal > goalRadius )
     show(grid);
     hold all
     
+    % Plot lookahead point
+    plot(lookahead(1),lookahead(2),'b*');
+
     % Plot path each instance so that it stays persistent while robot mesh
     % moves
     plot(path(:,1), path(:,2),"k--d")
-    
+
     % Plot the path of the robot as a set of transforms
     plotTrVec = [robotCurrentPose(1:2); 0];
     plotRot = axang2quat([0 0 1 robotCurrentPose(3)]);
