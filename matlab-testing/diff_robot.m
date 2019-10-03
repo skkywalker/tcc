@@ -1,11 +1,17 @@
 clear all
 close all
 
+omega_log = [0];
+vel_log = [0];
+
 % Reference to Real World
 real_size = 1.2;
+motor_rpm = 30;
+motor_rad = motor_rpm*2*pi/60;
+linear_speed = 0.5;
 
 % Load map
-map = imread('../src/test3.png');
+map = imread('../src/test.png');
 map_size = size(map);
 %map = imresize(map, [map_size(1) map_size(2)]/2);
 relation_real_img = map_size(2)/real_size; % pixels per meter
@@ -21,7 +27,7 @@ finish = fix(cat(1,finish.Centroid));
 finish = [finish(1) map_size(1)-finish(2)];
 
 % Define Robot
-robot = differentialDriveKinematics("TrackWidth", 0.1, "WheelRadius", 0.065, "VehicleInputs", "VehicleSpeedHeadingRate");
+robot = differentialDriveKinematics("TrackWidth", 0.1, "WheelRadius", 0.065/2, "VehicleInputs", "VehicleSpeedHeadingRate");
 
 % Path finding
 grid = binaryOccupancyMap(walls,relation_real_img);
@@ -41,8 +47,8 @@ robotCurrentPose = [robotInitialLocation initialOrientation]';
 
 controller = controllerPurePursuit;
 controller.Waypoints = path;
-controller.DesiredLinearVelocity = 0.08;
-controller.MaxAngularVelocity = 1;
+controller.DesiredLinearVelocity = linear_speed*motor_rad*robot.WheelRadius;
+controller.MaxAngularVelocity = 2*robot.WheelRadius*motor_rad*(1-linear_speed)/robot.TrackWidth;
 controller.LookaheadDistance = 0.12;
 goalRadius = 0.01;
 distanceToGoal = norm(robotInitialLocation - robotGoal);
@@ -67,14 +73,23 @@ while( distanceToGoal > goalRadius )
     % Get the robot's velocity using controller inputs
     vel = derivative(robot, robotCurrentPose, [v omega]);
     
-    vel = vel*dist/controller.LookaheadDistance;
+%     v = vel(1) + 1i*vel(2);
+%     
+%     if (v > robot.WheelRadius*motor_rad-abs(vel(3))*robot.TrackWidth/2)
+%         new_v = robot.WheelRadius*motor_rad-abs(vel(3))*robot.TrackWidth/2;
+%         vel(1) = new_v*cos(angle(v));
+%         vel(2) = new_v*sin(angle(v));
+%     end
+    
+    vel_log = [vel_log sqrt(vel(1)^2+vel(2)^2)];
+    omega_log = [omega_log vel(3)];
 
     % Update the current pose
     robotCurrentPose = robotCurrentPose + vel*sampleTime;
     
     % Re-compute the distance to the goal
     distanceToGoal = norm(robotCurrentPose(1:2) - robotGoal(:));
-    
+
     % Update the plot
     hold off
     show(grid);
