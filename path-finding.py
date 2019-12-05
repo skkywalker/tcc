@@ -1,7 +1,8 @@
 import queue
+import math
 import numpy as np
 from libs.map import Map
-import libs.tools as tools
+from libs.get_center import get_center
 import cv2
 import time
 
@@ -9,14 +10,15 @@ print("Starting program...")
 print("Setting up map from image...")
 now = time.time()
 
-im_map = cv2.imread('src/test-map.png', cv2.IMREAD_COLOR)
+im_map = cv2.imread('map-pics/test2.png', cv2.IMREAD_COLOR)
 
-dilation_kernel = np.ones((11,11), np.uint8) 
+scale = math.floor((0.1/2+0.03)/(2/640)) # (L/2+segurança)/(tamanho metros/tamanho pixels)
+dilation_kernel = np.ones((scale,scale), np.uint8) 
 
 pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))
-pos_start = tools.get_center(pos_start)
+pos_start = get_center(pos_start)
 finish = cv2.inRange(im_map, np.array([255,0,0]), np.array([255,0,0]))  
-finish = tools.get_center(finish)
+finish = get_center(finish)
 size = (len(im_map[0]),len(im_map))
 
 graph = Map(start=pos_start,size=size,finish=finish)
@@ -51,6 +53,11 @@ while not frontier.empty():
         if next not in came_from:
             frontier.put(next)
             came_from[next] = current
+try:
+    tmp = came_from[finish]
+except KeyError:
+    print("No path found!!!!!!")
+    exit(1)
 
 current = finish
 path = []
