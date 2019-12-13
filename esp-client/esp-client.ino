@@ -16,12 +16,13 @@ WiFiServer server(port);
 const char *ssid = "Espanha";  //Enter your wifi SSID
 const char *password = "02rafaluca03";  //Enter your wifi Password
 
-char buf[10];
+char buf[4];
  
 int count=0;
-//=======================================================================
-//                    Power on setup
-//=======================================================================
+
+int left_rpm = 0;
+int right_rpm = 0;
+
 void setup() 
 {
   Serial.begin(115200);
@@ -51,9 +52,8 @@ void setup()
   Serial.print(" on port ");
   Serial.println(port);
 }
-//=======================================================================
-//                    Loop
-//=======================================================================
+
+
  
 void loop() 
 {
@@ -67,16 +67,22 @@ void loop()
     
     while(client.connected()){
           
-      if(client.available()>=10){
+      if(client.available()>=4){
         // read data from the connected client
-        for (int i=0; i<10; i++) {
+        for (int i=0; i<4; i++) {
           buf[i] = client.read();
         }
-        Serial.println(buf);
-        client.write('1');
+        left_rpm = 10*(buf[0] - '0') + (buf[1] - '0');
+        right_rpm = 10*(buf[2] - '0') + (buf[3] - '0');
+        Serial.print("Left RPM: ");
+        Serial.println(left_rpm);
+        Serial.print("Right RPM: ");
+        Serial.println(right_rpm);
+        client.write("okay");
         client.stop();
         Serial.println("Client disconnected");
       }
     }
+    
   }
 }
