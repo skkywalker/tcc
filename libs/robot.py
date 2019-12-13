@@ -2,9 +2,11 @@ import numpy as np
 import math
 
 class DifferentialDrive():
-    def __init__(self,L,R,x,y,yaw,v=0.0,w=0.0):
+    def __init__(self,L,SIZE,R,x,y,yaw,k,v=0.0,w=0.0):
         self.L = L
         self.R = R
+        self.SIZE = SIZE
+        self.k = k
 
         self.x = x
         self.y = y
@@ -17,6 +19,7 @@ class DifferentialDrive():
         self.y_hist = [y]
     
     def update(self, dt):
+
         self.x += self.v * math.cos(self.yaw) * dt
         self.y += self.v * math.sin(self.yaw) * dt
         self.yaw += self.w * dt
@@ -43,7 +46,5 @@ class DifferentialDrive():
                 position = i
         return position
 
-    def pure_pursuit(self,finish,path,la,t):
-        while not (finish[0]+t > self.x and finish[0]-t < self.x and finish[1]+t > self.y and finish[1]-t < self.y):
-            # Run algorithm
-            print('a')
+    def next_position(self):
+        return((self.x + self.v*math.cos(self.yaw),self.y + self.v*math.sin(self.yaw)))
