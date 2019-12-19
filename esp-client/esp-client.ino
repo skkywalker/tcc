@@ -1,28 +1,23 @@
 #include <MultiStepper.h>
 #include <AccelStepper.h>
-
-/*
- * Copyright (c) 2018, circuits4you.com
- * All rights reserved.
- * Create a TCP Server on ESP8266 NodeMCU. 
- * TCP Socket Server Send Receive Demo
-*/
- 
 #include <ESP8266WiFi.h>
  
-#define SendKey 0  //Button to send data Flash BTN on NodeMCU
+//#define SendKey 0  //Button to send data Flash BTN on NodeMCU
 
-const int dirPin = 13;
-const int stepPin = 12;
+const int dirPinl = 13; // D7
+const int stepPinl = 12; // D6
+const int dirPinr = 2; //D4
+const int stepPinr = 16; //D0
  
-int port = 8888;  //Port number
+int port = 8888;
 WiFiServer server(port);
 
-AccelStepper stepper = AccelStepper(1, stepPin, dirPin);
+AccelStepper left = AccelStepper(1, stepPinl, dirPinl);
+AccelStepper right = AccelStepper(1, stepPinr, dirPinr);
  
 //Server connect to WiFi Network
-const char *ssid = "Espanha";  //Enter your wifi SSID
-const char *password = "02rafaluca03";  //Enter your wifi Password
+const char *ssid = "Espanha";
+const char *password = "02rafaluca03";
 
 char buf[6];
 
@@ -32,9 +27,11 @@ float right_rps = 0.0;
 void setup() 
 {
   Serial.begin(115200);
-  stepper.setMaxSpeed(600);
-  stepper.setSpeed(0);
-  pinMode(SendKey,INPUT_PULLUP);  //Btn to send data
+  left.setMaxSpeed(600);
+  right.setMaxSpeed(600);
+  left.setSpeed(0);
+  right.setSpeed(0);
+  //pinMode(SendKey,INPUT_PULLUP);  //Btn to send data
   Serial.println();
  
   WiFi.mode(WIFI_STA);
@@ -66,13 +63,15 @@ void setup()
 void loop() 
 {
   WiFiClient client = server.available();
-  stepper.runSpeed();
+  left.runSpeed();
+  right.runSpeed();
   
   if (client) {
     if(client.connected()) Serial.println("Client Connected");
 
     while(client.connected()){
-      stepper.runSpeed();
+      left.runSpeed();
+      right.runSpeed();
           
       if(client.available()>=6){
         // read data from the connected client
@@ -85,9 +84,10 @@ void loop()
         
         Serial.print("Left PPS: ");
         Serial.println(int(left_rps*200));
-        stepper.setSpeed(int(left_rps*200));
+        left.setSpeed(int(left_rps*200));
         Serial.print("Right PPS: ");
-        Serial.println(right_rps);
+        Serial.println(int(right_rps*200));
+        right.setSpeed(int(right_rps*200));
         client.write("okay");
         client.stop();
         Serial.println("Client disconnected");
