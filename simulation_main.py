@@ -29,17 +29,19 @@ def lookahead(path,la,i, max_la):
             return i+j,pos
     return len(path)-1, finish
 
-def calculate_angle(current, nex, desired, ganho):
+def calculate_angle(current, nex, desired):
     n = (nex[0]-current[0], nex[1]-current[1])
     d = (desired[0]-current[0], desired[1]-current[1])
     sin_theta = (n[0]*d[1]-d[0]*n[1])/(absolute(n)*absolute(d))
-    return np.arcsin(sin_theta) * ganho
+    return np.arcsin(sin_theta)
 
 def update(frame):
     global last_updated, init_time
     global robot
     global path,pathx,pathy, finish
     global real_map_width, real_map_height
+    global left_wheel_rps, right_wheel_rps, speed, omega
+    global deviation
     
     # Desenha as coisas que precisa
     ax1.clear()
@@ -50,12 +52,26 @@ def update(frame):
     ax1.plot(pathx,pathy, "-k", label="path")
     ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajectory")
     plot_arrow(robot,ax1)
-    if(norm((robot.x, robot.y), finish) < 0.01):
+    if(norm((robot.x, robot.y), finish) < 0.02):
         ani.event_source.stop()
+        fig, axs = plt.subplots(5, 1, constrained_layout=True)
+        fig.suptitle('Resultados', fontsize=16)
+
+        plot_vars = [right_wheel_rps, left_wheel_rps, speed, omega, deviation]
+        plot_titles = ["Roda Direita", "Roda Esquerda", "Velocidade", "Omega", "Desvio"]
+        plot_yaxis = ['rps', 'rps', 'm/s', 'rad/s', 'cm']
+
+        for i in range(5):
+            axs[i].plot(plot_vars[i])
+            axs[i].set_title(plot_titles[i])
+            axs[i].set_ylabel(plot_yaxis[i])
+            axs[i].grid(True, axis='y')
+
+        plt.show()
 
     # Correções do pure pursuit
 
-    closest = robot.find_closest(path, 0.2)
+    closest, dist = robot.find_closest(path, 0.2)
     pos, desired = lookahead(path, 0.1, closest, finish)
 
     ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
@@ -64,22 +80,35 @@ def update(frame):
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
 
-    robot.omega = calculate_angle(current_pos,next_pos,desired,1)
+    robot.update_speed(calculate_angle(current_pos,next_pos,desired),3)
 
     # Update das posições do robo
-    robot.update(time.time()-last_updated)
+    right_wheel_rps.append(robot.right_rps)
+    left_wheel_rps.append(robot.left_rps)
+    omega.append(robot.omega)
+    speed.append(robot.speed)
+    deviation.append(dist*100)
+
+    robot.update_pos(time.time()-last_updated)
     last_updated = time.time()
     
 '''
 Variáveis importantes da simulação
 '''
 
+left_wheel_rps = []
+right_wheel_rps = []
+speed = []
+omega = []
+deviation = []
+
 map_source = 'map-pics/test2.png'
 
 robot_features = {
     'largura' : 0.1,
     'comprimento' : 0.1,
-    'raio_roda' : 0.06
+    'raio_roda' : 0.032,
+    'rps_motor' : 1.5
 }
 
 real_map_width = 2 # em metros
@@ -101,7 +130,7 @@ finish = (path[-1])
 robot = DifferentialDrive(robot_features['largura'], \
     robot_features['comprimento'], \
     robot_features['raio_roda'], \
-    pathx[0],pathy[0],yaw=0,maxrps=2.5,speed=0.1)
+    pathx[0],pathy[0],yaw=-math.pi/4,max_rps=robot_features['rps_motor'])
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,1,1)
