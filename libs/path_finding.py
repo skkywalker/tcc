@@ -5,15 +5,15 @@ from .map import Map
 from .get_center import get_center
 import cv2
 import time
+import matplotlib.pyplot as plt
 
-def path_find(img):
-    print("Starting program...")
-    print("Setting up map from image...")
+def path_find(img, rob_w, scale, walls_only = 0):
+    print("Inicialiazando programa de path-finding...")
     now = time.time()
 
     im_map = cv2.imread(img, cv2.IMREAD_COLOR)
 
-    scale = math.floor((0.1/2+0.03)/(2/640)) # (L/2+segurança)/(tamanho metros/tamanho pixels)
+    scale = math.floor((rob_w/2)/scale) # (L/2+segurança)/(tamanho metros/tamanho pixels)
     dilation_kernel = np.ones((scale,scale), np.uint8) 
 
     pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))
@@ -26,15 +26,23 @@ def path_find(img):
 
     walls = cv2.inRange(im_map, np.array([0,0,50]), np.array([0,0,255]))
     walls = cv2.dilate(walls, dilation_kernel, iterations=3)
-    #cv2.imshow('walls', walls)
+    wall_img_backup = walls.copy()
+
+    if(walls_only):
+        print("Mostrando as paredes e saindo...")
+        cv2.imshow('walls', walls)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        exit(1)
+
     walls = cv2.findNonZero(walls)
 
     for point in walls:
         point = (point[0][0],point[0][1])
         graph.make_wall([point])
 
-    print("Map setup! Time:", round(time.time() - now, 2), "sec")
-    print("Initializing path-finding algorithm...")
+    print("Mapa inicializado! Tempo:", round(time.time() - now, 2), "sec")
+    print("Iniciando algoritmo...")
     now = time.time()
 
     # Start of Redblob algorithm
@@ -57,7 +65,10 @@ def path_find(img):
     try:
         tmp = came_from[finish]
     except KeyError:
-        print("No path found!!!!!!")
+        print("Nenhum caminho encontrado! Mostrando as paredes e saindo...")
+        cv2.imshow('walls', wall_img_backup)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         exit(1)
 
     current = finish
@@ -68,18 +79,15 @@ def path_find(img):
     path.append(pos_start)
     path.reverse()
 
-    print("Path found! Time:", round(time.time() - now, 2), "sec")
+    print("Caminho encontrado! Time:", round(time.time() - now, 2), "sec")
 
-    print("Preparing to show map...")
+    print("Mostrando mapa...")
     for i in path:
         im_map[(i[1], i[0])] = [0,0,0]
 
     # End of Redblob algorithm
 
-    #cv2.imshow('path chosen', im_map)
-
-    print("Done!")
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    #plt.imshow(im_map)
+    #plt.show()
 
     return path
