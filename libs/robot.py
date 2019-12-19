@@ -2,10 +2,12 @@ import numpy as np
 import math
 
 class DifferentialDrive():
-    def __init__(self,width,lenght,wheel_radius,x,y,yaw,max_rps):
+    def __init__(self,width,lenght,wheel_radius,x,y,yaw,max_rps,kp):
         self.width = width
         self.wheel_radius = wheel_radius
         self.lenght = lenght
+
+        self.kp = kp
 
         self.x = x
         self.y = y
@@ -36,8 +38,8 @@ class DifferentialDrive():
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
 
-    def update_speed(self, omega, kp):
-        omega = omega * kp
+    def update_speed(self, omega, gain):
+        omega = omega * gain
         if(omega < 0):
             sig = -1
         else:
@@ -51,9 +53,9 @@ class DifferentialDrive():
         self.speed = self.max_rps*2*math.pi*self.wheel_radius-abs(self.omega)*self.width/2
         self.update_wheel_speed()
 
-    def find_closest(self, path, kp):
-        x = self.x + self.speed*math.cos(self.yaw) * kp
-        y = self.y + self.speed*math.sin(self.yaw) * kp
+    def find_closest(self, path):
+        x = self.x + self.speed*math.cos(self.yaw) * self.kp
+        y = self.y + self.speed*math.sin(self.yaw) * self.kp
         least = math.sqrt( (x-path[0][0])**2 + (y-path[0][1])**2 )
         position = 0
         for i,pos in enumerate(path):
@@ -64,4 +66,4 @@ class DifferentialDrive():
         return position, least
 
     def next_position(self):
-        return((self.x + self.speed*math.cos(self.yaw),self.y + self.speed*math.sin(self.yaw)))
+        return((self.x + self.speed*math.cos(self.yaw)*self.kp, self.y + self.speed*math.sin(self.yaw)*self.kp))

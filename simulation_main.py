@@ -19,7 +19,7 @@ def norm(p1,p2):
 def absolute(point):
     return(math.sqrt(point[0]**2+point[1]**2))
 
-def lookahead(path,la,i, max_la):
+def lookahead(path,la,i, finish):
     x = path[i][0]
     y = path[i][1]
     for j,pos in enumerate(path[i:]):
@@ -36,6 +36,11 @@ def calculate_angle(current, nex, desired):
     return np.arcsin(sin_theta)
 
 def update(frame):
+    '''
+    Função chamada a cada frame para atualizar o plot
+    '''
+
+    # Definições das variáveis globais
     global last_updated, init_time
     global robot
     global path,pathx,pathy, finish
@@ -43,15 +48,17 @@ def update(frame):
     global left_wheel_rps, right_wheel_rps, speed, omega
     global deviation
     
-    # Desenha as coisas que precisa
+    # Operações de desenho no plot
     ax1.clear()
     ax1.imshow(img,extent=[0, real_map_width, 0, real_map_height])
     ax1.set_ylim([0, real_map_height])
     ax1.set_xlim([0, real_map_width])
     ax1.set_title(str(round(time.time()-init_time,1)) + " segundos")
     ax1.plot(pathx,pathy, "-k", label="path")
-    ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajectory")
+    ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajetória")
     plot_arrow(robot,ax1)
+
+    # Se chegar no ponto final, parar a animação e mostrar infos relevantes
     if(norm((robot.x, robot.y), finish) < 0.02):
         ani.event_source.stop()
         fig, axs = plt.subplots(5, 1, constrained_layout=True)
@@ -69,69 +76,84 @@ def update(frame):
 
         plt.show()
 
-    # Correções do pure pursuit
+    '''
+    Algoritmo Pure Pursuit
+    '''
+    # Encontra o ponto no path mais perto do carrinho numa próxima posição
+    # 'dist' tem função de debug
+    # 'closest' é a i-ésima posição do path
+    closest, dist = robot.find_closest(path)
 
-    closest, dist = robot.find_closest(path, 0.2)
-    pos, desired = lookahead(path, 0.1, closest, finish)
+    # Encontra a distância lookahead >= 'la', a partir da i-ésima posição
+    # 'desired' é a coordenada da lookahead
+    # 'pos' é a i-ésima posição de desired no path
+    pos, desired = lookahead(path, la=0.1, i=closest, finish=finish)
 
+    # Plota os pontos lookahead e mais próximo
     ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
-    ax1.plot([pathx[pos]],[pathy[pos]], marker='x', markersize=5, color="green")
+    ax1.plot([pathx[pos]],[pathy[pos]], marker='x', markersize=3, color="green")
 
+    # Calcula o novo omega, a partir das informações adquiridas
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
+    robot.update_speed(calculate_angle(current_pos,next_pos,desired),gain=3)
 
-    robot.update_speed(calculate_angle(current_pos,next_pos,desired),3)
-
-    # Update das posições do robo
+    # Update das listas de controle
     right_wheel_rps.append(robot.right_rps)
     left_wheel_rps.append(robot.left_rps)
     omega.append(robot.omega)
     speed.append(robot.speed)
     deviation.append(dist*100)
 
+    # Update da posição do carrinho e passagem de tempo
     robot.update_pos(time.time()-last_updated)
     last_updated = time.time()
     
 '''
-Variáveis importantes da simulação
+Programa principal
 '''
 
+# Listas de controle das variáveis
 left_wheel_rps = []
 right_wheel_rps = []
 speed = []
 omega = []
 deviation = []
 
+# Definições básicas
 map_source = 'map-pics/test2.png'
-
 robot_features = {
-    'largura' : 0.1,
-    'comprimento' : 0.1,
-    'raio_roda' : 0.032,
-    'rps_motor' : 1.5
+    'width' : 0.1,
+    'lenght' : 0.1,
+    'wheel_radius' : 0.032,
+    'max_rps' : 1.5
 }
-
 real_map_width = 2 # em metros
 
-
+# Conta da altura, em metros, da imagem
 img_height, img_width = get_image_dims(map_source)
 real_map_height = img_height*real_map_width/img_width
-    
-path = path_find(map_source, robot_features['largura'], real_map_width/img_width)
+
+# Operações de transformação com o path
+# 1- Transformar em metros
+# 2- Criar pathy e pathx, zipando a lista
+path = path_find(map_source, robot_features['width'], real_map_width/img_width)
 pathx = []
 pathy = []
 for i in range(len(path)):
-    path[i] = (path[i][0]*1.5/480,1.5-2*path[i][1]/640)
+    path[i] = (path[i][0]*real_map_width/img_width, \
+        real_map_height - real_map_height*path[i][1]/img_height)
     pathx.append(path[i][0])
     pathy.append(path[i][1])
-
 finish = (path[-1])
 
-robot = DifferentialDrive(robot_features['largura'], \
-    robot_features['comprimento'], \
-    robot_features['raio_roda'], \
-    pathx[0],pathy[0],yaw=-math.pi/4,max_rps=robot_features['rps_motor'])
+# Criação do robô diferencial
+robot = DifferentialDrive(robot_features['width'], \
+    robot_features['lenght'], \
+    robot_features['wheel_radius'], \
+    pathx[0],pathy[0],yaw=-math.pi/4,max_rps=robot_features['max_rps'], kp=0.2)
 
+# Início da animação
 fig = plt.figure()
 ax1 = fig.add_subplot(1,1,1)
 img = plt.imread(map_source)
