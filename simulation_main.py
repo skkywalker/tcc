@@ -6,6 +6,12 @@ import matplotlib.animation as animation
 import time
 import math
 import numpy as np
+import cv2
+
+def get_image_dims(im_path):
+    im = cv2.imread(im_path)
+    h, w, c = im.shape
+    return h,w
 
 def norm(p1,p2):
     return(math.sqrt( (p1[0]-p2[0])**2 + (p1[1]-p2[1])**2 ))
@@ -23,22 +29,23 @@ def lookahead(path,la,i, max_la):
             return i+j,pos
     return len(path)-1, finish
 
-def calculate_angle(current, nex, desired):
+def calculate_angle(current, nex, desired, ganho):
     n = (nex[0]-current[0], nex[1]-current[1])
     d = (desired[0]-current[0], desired[1]-current[1])
     sin_theta = (n[0]*d[1]-d[0]*n[1])/(absolute(n)*absolute(d))
-    return np.arcsin(sin_theta)
+    return np.arcsin(sin_theta) * ganho
 
 def update(frame):
     global last_updated, init_time
     global robot
     global path,pathx,pathy, finish
+    global real_map_width, real_map_height
     
     # Desenha as coisas que precisa
     ax1.clear()
-    ax1.imshow(img,extent=[0, 2, 0, 1.5])
-    ax1.set_ylim([0, 1.5])
-    ax1.set_xlim([0, 2])
+    ax1.imshow(img,extent=[0, real_map_width, 0, real_map_height])
+    ax1.set_ylim([0, real_map_height])
+    ax1.set_xlim([0, real_map_width])
     ax1.set_title(str(round(time.time()-init_time,1)) + " segundos")
     ax1.plot(pathx,pathy, "-k", label="path")
     ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajectory")
@@ -57,14 +64,31 @@ def update(frame):
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
 
-    robot.w = calculate_angle(current_pos,next_pos,desired) * robot.k
+    robot.omega = calculate_angle(current_pos,next_pos,desired,1)
 
     # Update das posições do robo
     robot.update(time.time()-last_updated)
     last_updated = time.time()
     
+'''
+Variáveis importantes da simulação
+'''
+
+map_source = 'map-pics/test2.png'
+
+robot_features = {
+    'largura' : 0.1,
+    'comprimento' : 0.1,
+    'raio_roda' : 0.06
+}
+
+real_map_width = 2 # em metros
+
+
+img_height, img_width = get_image_dims(map_source)
+real_map_height = img_height*real_map_width/img_width
     
-path = path_find('map-pics/test2.png')
+path = path_find(map_source, robot_features['largura'], real_map_width/img_width)
 pathx = []
 pathy = []
 for i in range(len(path)):
@@ -74,15 +98,16 @@ for i in range(len(path)):
 
 finish = (path[-1])
 
-robot = DifferentialDrive(0.1,0.1,0.06,pathx[0],pathy[0],2*math.pi-0.5,1,0.1,0)
+robot = DifferentialDrive(robot_features['largura'], \
+    robot_features['comprimento'], \
+    robot_features['raio_roda'], \
+    pathx[0],pathy[0],yaw=0,maxrps=2.5,speed=0.1)
 
 fig = plt.figure()
 ax1 = fig.add_subplot(1,1,1)
-img = plt.imread('map-pics/test2.png')
+img = plt.imread(map_source)
 init_time = time.time()
 last_updated = init_time
 
 ani = animation.FuncAnimation(fig, update, interval=50)
 plt.show()
-    
-#robot.pure_pursuit((0,0),[(1,1)],1,1)
