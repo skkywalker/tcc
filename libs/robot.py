@@ -2,41 +2,38 @@ import numpy as np
 import math
 
 class DifferentialDrive():
-    def __init__(self,L,SIZE,R,x,y,yaw,k,v=0.0,w=0.0):
-        self.L = L
-        self.R = R
-        self.SIZE = SIZE
-        self.k = k
+    def __init__(self,width,lenght,wheel_radius,x,y,yaw,max_rps,speed=0.1):
+        self.width = width
+        self.wheel_radius = wheel_radius
+        self.lenght = lenght
 
         self.x = x
         self.y = y
         self.yaw = yaw
 
-        self.v = v
-        self.w = w
+        self.speed = speed
+        self.max_rps = max_rps
+        self.omega = 0.0
 
         self.x_hist = [x]
         self.y_hist = [y]
     
     def update(self, dt):
 
-        self.x += self.v * math.cos(self.yaw) * dt
-        self.y += self.v * math.sin(self.yaw) * dt
-        self.yaw += self.w * dt
+        self.x += self.speed * math.cos(self.yaw) * dt
+        self.y += self.speed * math.sin(self.yaw) * dt
+        self.yaw += self.omega * dt
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
 
     def get_wheel_speed(self):
-        '''
-        Returns right & left wheels in m/s
-        '''
-        left = self.v - self.w*self.L/2
-        right = self.v + self.w*self.L/2
+        left = (self.speed - self.omega*self.lenght/2)/self.wheel_radius
+        right = (self.speed + self.omega*self.lenght/2)/self.wheel_radius
         return (left,right)
 
     def find_closest(self, path, kp):
-        x = self.x + self.v*math.cos(self.yaw) * kp
-        y = self.y + self.v*math.sin(self.yaw) * kp
+        x = self.x + self.speed*math.cos(self.yaw) * kp
+        y = self.y + self.speed*math.sin(self.yaw) * kp
         least = math.sqrt( (x-path[0][0])**2 + (y-path[0][1])**2 )
         position = 0
         for i,pos in enumerate(path):
@@ -47,4 +44,7 @@ class DifferentialDrive():
         return position
 
     def next_position(self):
-        return((self.x + self.v*math.cos(self.yaw),self.y + self.v*math.sin(self.yaw)))
+        return((self.x + self.speed*math.cos(self.yaw),self.y + self.speed*math.sin(self.yaw)))
+
+    def apply_max_motor(self):
+        return 0
