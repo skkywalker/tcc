@@ -1,7 +1,14 @@
 import numpy as np
-from matplotlib import pyplot
 
 class Map:
+    '''
+    Classe mapa. Definimos 'graph' como a matriz do mapa, onde:
+    0 -> Parede
+    1 -> Livre
+    2 -> Posição Inicial
+    3 -> Posição Final
+    '''
+    
     def __init__(self,size,start,finish):
         self.size = size
         self.start = start
