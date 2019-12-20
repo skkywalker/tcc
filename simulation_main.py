@@ -103,10 +103,11 @@ if __name__ == '__main__':
         pathy.append(path[i][1])
 
     # Criação do robô diferencial
+    yaw = math.atan2(path[1][1]-path[0][1],path[1][0]-path[0][0])
     robot = DifferentialDrive(robot_features['width'], \
         robot_features['lenght'], \
         robot_features['wheel_radius'], \
-        pathx[0],pathy[0],yaw=-math.pi/4,max_rps=robot_features['max_rps'], kp=0.2)
+        pathx[0],pathy[0],yaw=yaw,max_rps=robot_features['max_rps'], kp=0.2)
 
     # Início da animação
     fig = plt.figure()
