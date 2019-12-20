@@ -49,15 +49,18 @@ class DifferentialDrive():
         self.left_wheel_rps_hist.append(self.left_rps)
         self.right_wheel_rps_hist.append(self.right_rps)
     
-    def update_pos(self, dt):
+    def update_pos(self, dt, yaw_first=0):
         '''
         Calcula e atualiza a posição do robô, com base nas velocidade
         e posições x, y e yaw.
         '''
-        self.yaw += self.omega * dt
+        if(yaw_first):
+            self.yaw += self.omega * dt
         self.x += self.speed * math.cos(self.yaw) * dt
         self.y += self.speed * math.sin(self.yaw) * dt
-        
+        if(not yaw_first):
+            self.yaw += self.omega * dt
+            
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
 
