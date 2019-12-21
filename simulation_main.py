@@ -15,7 +15,7 @@ def update(frame):
     '''
 
     # Definições das variáveis globais
-    global robot
+    global robot, ax1
     global last_updated, init_time
     global path,pathx,pathy,img
     global real_map_width, real_map_height

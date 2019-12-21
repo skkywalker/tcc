@@ -1,6 +1,7 @@
 from libs.real.get_map import get_map_cam
 
 from libs.path_finding import path_find
+from libs.real.robot import RealDifferentialDrive
 from libs.plot_arrow import plot_arrow
 from libs.custom_math import norm, absolute, calculate_angle, get_image_dims
 import matplotlib.pyplot as plt
@@ -12,9 +13,11 @@ import cv2
 
 def update(frame):
     global robot, map_img
-    global ax1
+    global init_time, ax1
+    global path,pathx,pathy
+    global real_map_width, real_map_height
 
-    robot.get_info()
+    robot.update_info()
 
     # Operações de desenho no plot
     ax1.clear()
