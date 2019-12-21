@@ -13,11 +13,12 @@ import cv2
 
 def update(frame):
     global robot, map_img
-    global init_time, ax1
+    global init_time, last_updated, ax1
     global path,pathx,pathy
     global real_map_width, real_map_height
 
-    robot.update_info()
+    robot.update_info(time.time()-last_updated)
+    last_updated = time.time()
 
     # Operações de desenho no plot
     ax1.clear()
@@ -103,6 +104,7 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax1 = fig.add_subplot(1,1,1)
     init_time = time.time()
+    last_updated = init_time
 
     ani = animation.FuncAnimation(fig, update, interval=50)
     plt.show()

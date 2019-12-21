@@ -59,8 +59,8 @@ class RealDifferentialDrive():
         '''
         Pega pela camera o x, y e yaw do robo
         '''
-        self.previous_x = x
-        self.previous_y = y
+        self.previous_x = x - 0.001
+        self.previous_y = y - 0.001
         self.previous_yaw = yaw
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
@@ -93,7 +93,7 @@ class RealDifferentialDrive():
         # Calcula a velocidade a partir do que "sobra" de rps para o motor
         self.speed = self.max_rps*2*math.pi*self.wheel_radius-abs(self.omega)*self.width/2
 
-        self.send_wheel_speed()
+        self.send_wheel_speed(dest=('192.168.1.172', 8888))
 
     def lookahead(self, path, la):
         '''
