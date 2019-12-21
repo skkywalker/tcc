@@ -17,7 +17,7 @@ def update(frame):
     # Definições das variáveis globais
     global robot
     global last_updated, init_time
-    global path,pathx,pathy
+    global path,pathx,pathy,img
     global real_map_width, real_map_height
     
     # Operações de desenho no plot
@@ -45,7 +45,7 @@ def update(frame):
             axs[i].plot(plot_vars[i])
             axs[i].set_title(plot_titles[i])
             axs[i].set_ylabel(plot_yaxis[i])
-            axs[i].grid(True, axis='y')
+            axs[i].grid(True, axis='both')
 
         plt.show()
 
@@ -79,12 +79,12 @@ if __name__ == '__main__':
     # Definições básicas
     map_source = 'map-pics/test2.png'
     robot_features = {
-        'width' : 0.1,
-        'lenght' : 0.1,
-        'wheel_radius' : 0.032,
+        'width' : 0.12,
+        'lenght' : 0.22,
+        'wheel_radius' : 0.0315,
         'max_rps' : 1.5
     }
-    real_map_width = 2 # em metros
+    real_map_width = 2.5 # em metros
 
     # Conta da altura, em metros, da imagem
     img_height, img_width = get_image_dims(map_source)
