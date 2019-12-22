@@ -1,5 +1,4 @@
 import numpy as np
-from libs.map import Map
 import cv2
 
 def get_center(frame):

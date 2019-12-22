@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from ..custom_math import norm
+from .get_robot_xy import get_robot_xy
 import socket
 
 class RealDifferentialDrive():
@@ -54,17 +55,25 @@ class RealDifferentialDrive():
         tcp.send(data.encode())
         _ = tcp.recv(1)
         tcp.close()
+
+    def get_cam_info(self, mp):
+        camera = cv2.VideoCapture(cam)
+        ret, frame = camera.read()
+        camera.release()
+        x,y,yaw = get_robot_xyyaw(frame, mp)
+        return x,y,yaw
     
-    def update_info(self, dt):
+    def update_info(self, dt, map_height):
         '''
         Pega pela camera o x, y e yaw do robo
         '''
         self.previous_x = x - 0.001
         self.previous_y = y - 0.001
         self.previous_yaw = yaw
+        self.x,self.y,self.yaw = self.get_cam_info(map_height)
+
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
-        self.x,self.y,self.yaw = TODOTODOTODOTODOTODOTODOTODOTODO()
 
         self.speed = norm((self.previous_x,self.previous_y),(self.x, self.y))/dt
         self.omega = (self.yaw-self.previous_yaw)/dt

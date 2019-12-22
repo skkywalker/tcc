@@ -65,7 +65,7 @@ def update(frame):
     # Calcula o novo omega, a partir das informações adquiridas
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
-    robot.send_omega(calculate_angle(current_pos,next_pos,lookahead),gain=3)
+    robot.update_speed(calculate_angle(current_pos,next_pos,lookahead),gain=3)
 
 if __name__ == '__main__':
     map_img = get_map_cam(cam_num=0)
