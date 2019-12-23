@@ -1,7 +1,7 @@
 from libs.real.get_map import get_map_cam
-
 from libs.path_finding import path_find
 from libs.real.robot import RealDifferentialDrive
+from libs.real.get_robot_xy import get_robot_xyyaw
 from libs.plot_arrow import plot_arrow
 from libs.custom_math import norm, absolute, calculate_angle, get_image_dims
 import matplotlib.pyplot as plt
@@ -12,12 +12,14 @@ import numpy as np
 import cv2
 
 def update(frame):
+    global camera
     global robot, map_img
     global init_time, last_updated, ax1
     global path,pathx,pathy
     global real_map_width, real_map_height
 
-    robot.update_info(time.time()-last_updated)
+    ret, frame = camera.read()
+    robot.update_info(time.time()-last_updated,get_robot_xyyaw(frame,real_map_height))
     last_updated = time.time()
 
     # Operações de desenho no plot
@@ -32,6 +34,7 @@ def update(frame):
 
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
     if(norm((robot.x, robot.y), path[-1]) < 0.02):
+        camera.release()
         ani.event_source.stop()
         fig, axs = plt.subplots(5, 1, constrained_layout=True)
         fig.suptitle('Resultados', fontsize=16)
@@ -69,6 +72,7 @@ def update(frame):
 
 if __name__ == '__main__':
     map_img = get_map_cam(cam_num=0)
+    camera = cv2.VideoCapture(0)
 
     robot_features = {
         'width' : 0.18,
@@ -95,10 +99,12 @@ if __name__ == '__main__':
         pathy.append(path[i][1])
 
     # Criação do robô diferencial
-    robot = RealDifferentialDrive(robot_features['width'], \
+    ret,frame = camera.read()
+    robot = RealDifferentialDrive(get_robot_xyyaw(frame,real_map_height), \
+        robot_features['width'], \
         robot_features['lenght'], \
         robot_features['wheel_radius'], \
-        max_rps=robot_features['max_rps'])
+        max_rps=robot_features['max_rps'], kp=0.2)
 
     # Início da animação
     fig = plt.figure()
