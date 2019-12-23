@@ -1,11 +1,12 @@
 import numpy as np
 import math
 from ..custom_math import norm
-from .get_robot_xy import get_robot_xy
+from .get_robot_xy import get_robot_xyyaw
 import socket
+import cv2
 
 class RealDifferentialDrive():
-    def __init__(self,width,lenght,wheel_radius,max_rps,kp):
+    def __init__(self,init_pos,width,lenght,wheel_radius,max_rps,kp):
         # Características gerais
         self.width = width
         self.wheel_radius = wheel_radius
@@ -15,26 +16,24 @@ class RealDifferentialDrive():
         self.max_rps = max_rps
 
         # Posição inicial
-        self.x = 0
-        self.previous_x = 0
-        self.y = 0
-        self.previous_y = 0
-        self.yaw = 0
-        self.previous_yaw = 0
+        self.x = init_pos[0]
+        self.previous_x = init_pos[0]
+        self.y = init_pos[1]
+        self.previous_y = init_pos[1]
+        self.yaw = init_pos[2]
+        self.previous_yaw = init_pos[2]
 
         # Velocidades iniciais
         self.omega = 0.0
         self.speed = max_rps*wheel_radius*2*np.pi/10
 
-        self.update_info()
-
         # Variáveis para registrar histórico
-        self.x_hist = [x]
-        self.y_hist = [y]
+        self.x_hist = []
+        self.y_hist = []
         self.left_wheel_rps_hist = []
         self.right_wheel_rps_hist = []
-        self.speed_hist = [self.speed]
-        self.omega_hist = [self.omega]
+        self.speed_hist = []
+        self.omega_hist = []
         self.dist_hist = []
 
     def send_wheel_speed(self, dest):
@@ -55,22 +54,17 @@ class RealDifferentialDrive():
         tcp.send(data.encode())
         _ = tcp.recv(1)
         tcp.close()
-
-    def get_cam_info(self, mp):
-        camera = cv2.VideoCapture(cam)
-        ret, frame = camera.read()
-        camera.release()
-        x,y,yaw = get_robot_xyyaw(frame, mp)
-        return x,y,yaw
     
-    def update_info(self, dt, map_height):
+    def update_info(self, dt, pos):
         '''
         Pega pela camera o x, y e yaw do robo
         '''
-        self.previous_x = x - 0.001
-        self.previous_y = y - 0.001
-        self.previous_yaw = yaw
-        self.x,self.y,self.yaw = self.get_cam_info(map_height)
+        self.previous_x = self.x - 0.001
+        self.previous_y = self.y - 0.001
+        self.previous_yaw = self.yaw
+        self.x = pos[0]
+        self.y = pos[1]
+        self.yaw = pos[2]
 
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
