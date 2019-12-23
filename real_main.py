@@ -1,5 +1,5 @@
 from libs.real.get_map import get_map_cam
-from libs.path_finding import path_find
+from libs.real.path_finding import path_find
 from libs.real.robot import RealDifferentialDrive
 from libs.real.get_robot_xy import get_robot_xyyaw
 from libs.plot_arrow import plot_arrow
