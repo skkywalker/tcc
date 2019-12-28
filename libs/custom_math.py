@@ -22,3 +22,7 @@ def get_image_dims(im_path):
     im = cv2.imread(im_path)
     h, w, c = im.shape
     return h,w
+
+def real_get_image_dims(img):
+    h, w, c = img.shape
+    return h,w
