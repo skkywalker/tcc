@@ -36,7 +36,7 @@ def get_robot_xyyaw(frame, real_height):
     Yi = int(0.5*(c1_y + c2_y))
 
     # Yaw é o ângulo entre eles
-    yaw = math.atan2(c2_y-c1_y,c2_x-c1_x)
+    yaw = -1*math.atan2(c1_y-c2_y,c1_x-c2_x)
 
     # Passamos X e Y para coordenadas em metro
     X = Xi*real_height/height
@@ -51,7 +51,5 @@ def get_robot_xyyaw(frame, real_height):
     cv2.circle(framecp,(c2_x,c2_y),2,[255,0,0],3)
 
     cv2.circle(framecp,(Xi,Yi),3,[100,100,100],3)
-
-    cv2.imshow('a', framecp)
 
     return X, Y, yaw

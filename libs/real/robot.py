@@ -66,6 +66,8 @@ class RealDifferentialDrive():
         self.y = pos[1]
         self.yaw = pos[2]
 
+        print(self.yaw)
+
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
 
