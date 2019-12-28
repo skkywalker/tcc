@@ -9,7 +9,9 @@ def organise_data(lista):
     global color_names, color_location, samples
 
     tmp_list = [[] for i in color_names]
-    # tmp_list = [ [],[] ]
+    # tmp_list = [ [] ]
+    if (len(color_names) == 1):
+        tmp_list = lista[0]
     for color in range(len(color_names)):
         for samp in lista:
             # samp = [[C1], [C2]]
