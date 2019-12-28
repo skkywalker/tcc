@@ -1,9 +1,10 @@
-from libs.real.get_map import get_map_cam
+from libs.real.get_map import get_map_clicking
+from libs.real.get_map import rotateImage
 from libs.real.path_finding import path_find
 from libs.real.robot import RealDifferentialDrive
 from libs.real.get_robot_xy import get_robot_xyyaw
 from libs.plot_arrow import plot_arrow
-from libs.custom_math import norm, absolute, calculate_angle, get_image_dims
+from libs.custom_math import norm, absolute, calculate_angle, real_get_image_dims
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
@@ -11,15 +12,36 @@ import math
 import numpy as np
 import cv2
 
+def load_map_setup():
+    map_img = cv2.imread('map_setup/map.png')
+    f = open('map_setup/rotate_angle', 'r')
+    map_angle = float(f.read())
+    f.close()
+    f = open('map_setup/br', 'r')
+    map_br = f.read()
+    map_br = tuple(map(int, map_br[1:-1].split(',')))
+    f.close()
+    f = open('map_setup/tl', 'r')
+    map_tl = f.read()
+    map_tl = tuple(map(int, map_tl[1:-1].split(',')))
+    f.close()
+    return map_img, map_angle, map_tl, map_br
+
+def get_frame():
+    global camera, map_angle, map_tl, map_br
+    ret, frame = camera.read()
+    frame = rotateImage(frame,map_angle, map_tl)
+    frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
+    return frame
+
 def update(frame):
-    global camera
     global robot, map_img
     global init_time, last_updated, ax1
     global path,pathx,pathy
     global real_map_width, real_map_height
 
-    ret, frame = camera.read()
-    robot.update_info(time.time()-last_updated,get_robot_xyyaw(frame,real_map_height))
+    im = get_frame()
+    robot.update_info(time.time()-last_updated,get_robot_xyyaw(im,real_map_height))
     last_updated = time.time()
 
     # Operações de desenho no plot
@@ -28,10 +50,11 @@ def update(frame):
     ax1.set_ylim([0, real_map_height])
     ax1.set_xlim([0, real_map_width])
     ax1.set_title(str(round(time.time()-init_time,1)) + " segundos")
-    ax1.plot(pathx,pathy, "-k", label="path")
-    ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajetória")
+    #ax1.plot(pathx,pathy, "-k", label="path")
+    #ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajetória")
     plot_arrow(robot,ax1)
 
+    '''
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
     if(norm((robot.x, robot.y), path[-1]) < 0.02):
         camera.release()
@@ -53,7 +76,7 @@ def update(frame):
         plt.show()
     
     '''
-    Algoritmo Pure Pursuit
+    #Algoritmo Pure Pursuit
     '''
     # Encontra a distância lookahead >= 'la', a partir da posição mais próxima
     # 'closest' é a i-ésima posição em path mais próxima (ponto vermelho)
@@ -69,9 +92,9 @@ def update(frame):
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
     robot.update_speed(calculate_angle(current_pos,next_pos,lookahead),gain=3)
-
+    '''
 if __name__ == '__main__':
-    map_img = get_map_cam(cam_num=0)
+    map_img, map_angle, map_tl, map_br = load_map_setup()
     camera = cv2.VideoCapture(0)
 
     robot_features = {
@@ -83,23 +106,25 @@ if __name__ == '__main__':
     real_map_width = 2.5 # em metros
 
     # Conta da altura, em metros, da imagem
-    img_height, img_width = get_image_dims(map_img)
+    img_height, img_width = real_get_image_dims(map_img)
     real_map_height = img_height*real_map_width/img_width
 
     # Operações de transformação com o path
     # 1- Transformar em metros
     # 2- Criar pathy e pathx, zipando a lista
-    path = path_find(map_img, robot_features['width'], real_map_width/img_width, iters=3)
-    pathx = []
-    pathy = []
-    for i in range(len(path)):
-        path[i] = (path[i][0]*real_map_width/img_width, \
-            real_map_height - real_map_height*path[i][1]/img_height)
-        pathx.append(path[i][0])
-        pathy.append(path[i][1])
+    #path = path_find(map_img, robot_features['width'], real_map_width/img_width, iters=3)
+    #pathx = []
+    #pathy = []
+    #for i in range(len(path)):
+    #    path[i] = (path[i][0]*real_map_width/img_width, \
+    #        real_map_height - real_map_height*path[i][1]/img_height)
+    #    pathx.append(path[i][0])
+    #    pathy.append(path[i][1])
 
     # Criação do robô diferencial
     ret,frame = camera.read()
+    frame = rotateImage(frame,map_angle, map_tl)
+    frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
     robot = RealDifferentialDrive(get_robot_xyyaw(frame,real_map_height), \
         robot_features['width'], \
         robot_features['lenght'], \
@@ -107,8 +132,11 @@ if __name__ == '__main__':
         max_rps=robot_features['max_rps'], kp=0.2)
 
     # Início da animação
+    print("inicio da animacao")
     fig = plt.figure()
+    print("fig criada")
     ax1 = fig.add_subplot(1,1,1)
+    print('subplots criados')
     init_time = time.time()
     last_updated = init_time
 
