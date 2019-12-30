@@ -3,38 +3,47 @@ import math
 import numpy as np
 from ..map import Map
 from ..get_center import get_center
+from .color import color
 import cv2
 import time
 import matplotlib.pyplot as plt
 
-def path_find(img, rob_w, scale, iters, walls_only = 0):
+def read_filter(name, mapa, lower, upper):
+    ret = cv2.inRange(mapa, lower, upper)
+    ret = cv2.morphologyEx(ret, cv2.MORPH_OPEN, np.ones([5,5]))
+    ret = cv2.morphologyEx(ret, cv2.MORPH_CLOSE, np.ones([5,5]))
+    cv2.imshow(name, ret)
+    ret = get_center(ret)
+    return ret
+
+def path_find(im_map, rob_w, scale, iters, walls_only = 0):
     '''
     Algoritmo Breadth First Search, para encontrar o melhor caminho
     '''
     print("Inicialiazando programa de path-finding...")
     now = time.time()
 
-    # Inicializa o mapa a partir de uma imagem
-    im_map = cv2.imread(img, cv2.IMREAD_COLOR)
-
     # Seta o tamanho da dilatação das parede, para levar em conta
     # a largura do carrinho. 'scale' equivale a relação metro/pixel
     scale = math.floor((rob_w/2)/scale)
     dilation_kernel = np.ones((scale,scale), np.uint8) 
 
+    verm, am, verd = color('vermelho'),color('amarelo'),color('verde')
     # Encontra as posições iniciais e finais
-    pos_start = cv2.inRange(im_map, np.array([0,255,0]), np.array([0,255,0]))
-    pos_start = get_center(pos_start)
-    finish = cv2.inRange(im_map, np.array([255,0,0]), np.array([255,0,0]))  
-    finish = get_center(finish)
+    pos_start = read_filter('pos_start', im_map, verm[0], verm[1])
+    finish = read_filter('finish', im_map, am[0], am[1])
     size = (len(im_map[0]),len(im_map))
 
     # Define um objeto mapa, que contém as funções para encontrar o caminho
     graph = Map(start=pos_start,size=size,finish=finish)
 
-    # Cria uma máscara com as paredes (vermelho) e faz a dilatação
-    walls = cv2.inRange(im_map, np.array([0,0,50]), np.array([0,0,255]))
+    # Cria uma máscara com as paredes (verde) e faz a dilatação
+    walls = cv2.inRange(im_map, verd[0], verd[1])
+    walls = cv2.morphologyEx(walls, cv2.MORPH_OPEN, np.ones([5,5]))
+    walls = cv2.morphologyEx(walls, cv2.MORPH_CLOSE, np.ones([5,5]))
     walls = cv2.dilate(walls, dilation_kernel, iterations=iters)
+    cv2.imshow('walls',walls)
+
     wall_img_backup = walls.copy()
 
     # Se quiser observar apenas as paredes dilatadas, passe

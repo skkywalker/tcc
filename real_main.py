@@ -1,5 +1,4 @@
-from libs.real.get_map import get_map_clicking
-from libs.real.get_map import rotateImage
+from libs.real.get_map import get_map_clicking,rotateImage
 from libs.real.path_finding import path_find
 from libs.real.robot import RealDifferentialDrive
 from libs.real.get_robot_xy import get_robot_xyyaw
@@ -30,13 +29,14 @@ def load_map_setup():
 def get_frame():
     global camera, map_angle, map_tl, map_br
     ret, frame = camera.read()
+    frame = cv2.resize(frame,(640,480))
     frame = rotateImage(frame,map_angle, map_tl)
     frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
     return frame
 
-def update(frame):
+def update():
     global robot, map_img
-    global init_time, last_updated, ax1
+    global init_time, last_updated
     global path,pathx,pathy
     global real_map_width, real_map_height
 
@@ -123,6 +123,7 @@ if __name__ == '__main__':
 
     # Criação do robô diferencial
     ret,frame = camera.read()
+    frame = cv2.resize(frame,(640,480))
     frame = rotateImage(frame,map_angle, map_tl)
     frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
     robot = RealDifferentialDrive(get_robot_xyyaw(frame,real_map_height), \
@@ -131,14 +132,8 @@ if __name__ == '__main__':
         robot_features['wheel_radius'], \
         max_rps=robot_features['max_rps'], kp=0.2)
 
-    # Início da animação
-    print("inicio da animacao")
-    fig = plt.figure()
-    print("fig criada")
-    ax1 = fig.add_subplot(1,1,1)
-    print('subplots criados')
     init_time = time.time()
     last_updated = init_time
 
-    ani = animation.FuncAnimation(fig, update, interval=50)
-    plt.show()
+    while(True):
+        update()

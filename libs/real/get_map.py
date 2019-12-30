@@ -22,6 +22,7 @@ def get_map_clicking():
     camera = cv2.VideoCapture(0)
     while(True):
         ret, frame = camera.read()
+        frame = cv2.resize(frame,(640,480))
         if len(pos)==0:
             text = 'Top left'
         elif(len(pos)==1):
@@ -42,6 +43,7 @@ def get_map_clicking():
 
     while(True):
         ret, frame = camera.read()
+        frame = cv2.resize(frame,(640,480))
         rotated_img = rotateImage(frame, rotate_angle, tl)
         if len(pos)==0:
             text = 'Bottom Right'

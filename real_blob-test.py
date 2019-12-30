@@ -6,6 +6,7 @@ camera = cv2.VideoCapture(0)
 
 while(1):
     ret, frame = camera.read()
+    frame = cv2.resize(frame,(640,480))
     blue = frame[:,:,0]
     ret, blue_mask = cv2.threshold(blue,220,255,cv2.THRESH_BINARY)
     #mask = get_robot_xy(frame)
