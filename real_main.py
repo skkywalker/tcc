@@ -45,20 +45,21 @@ def update():
     last_updated = time.time()
 
     # Operações de desenho no plot
-    ax1.clear()
-    ax1.imshow(map_img,extent=[0, real_map_width, 0, real_map_height])
-    ax1.set_ylim([0, real_map_height])
-    ax1.set_xlim([0, real_map_width])
-    ax1.set_title(str(round(time.time()-init_time,1)) + " segundos")
-    #ax1.plot(pathx,pathy, "-k", label="path")
-    #ax1.plot(robot.x_hist, robot.y_hist, "-b", label="trajetória")
-    plot_arrow(robot,ax1)
+    for i in path:
+        im[(i[1], i[0])] = [0,0,0]
+
+    pos_im = (int(robot.x*im.shape[1]/real_map_width),im.shape[0]-int(robot.y*im.shape[0]/real_map_height))
+    fin_im = (int(pos_im[0]+30*np.cos(robot.yaw)),int(pos_im[1]-30*np.sin(robot.yaw)))
+    cv2.arrowedLine(im, pos_im, fin_im,[50,50,50],3)
+    cv2.imshow('robot', im)
+    if cv2.waitKey(30) & 0xff == 27:
+        return 1
+
 
     '''
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
     if(norm((robot.x, robot.y), path[-1]) < 0.02):
         camera.release()
-        ani.event_source.stop()
         fig, axs = plt.subplots(5, 1, constrained_layout=True)
         fig.suptitle('Resultados', fontsize=16)
 
@@ -93,9 +94,11 @@ def update():
     next_pos = robot.next_position()
     robot.update_speed(calculate_angle(current_pos,next_pos,lookahead),gain=3)
     '''
+    return 0
 if __name__ == '__main__':
-    map_img, map_angle, map_tl, map_br = load_map_setup()
+    _, map_angle, map_tl, map_br = load_map_setup()
     camera = cv2.VideoCapture(0)
+    map_img = get_frame()
 
     robot_features = {
         'width' : 0.18,
@@ -112,7 +115,9 @@ if __name__ == '__main__':
     # Operações de transformação com o path
     # 1- Transformar em metros
     # 2- Criar pathy e pathx, zipando a lista
-    #path = path_find(map_img, robot_features['width'], real_map_width/img_width, iters=3)
+    path = path_find(map_img, robot_features['width'], real_map_width/img_width, iters=3)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     #pathx = []
     #pathy = []
     #for i in range(len(path)):
@@ -135,5 +140,6 @@ if __name__ == '__main__':
     init_time = time.time()
     last_updated = init_time
 
-    while(True):
-        update()
+    check_ended = 0
+    while(check_ended == 0):
+        check_ended = update()
