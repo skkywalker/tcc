@@ -3,6 +3,7 @@ import math
 from ..custom_math import norm
 from .get_robot_xy import get_robot_xyyaw
 import socket
+import time
 import cv2
 
 class RealDifferentialDrive():
@@ -48,11 +49,12 @@ class RealDifferentialDrive():
         self.left_wheel_rps_hist.append(self.left_rps)
         self.right_wheel_rps_hist.append(self.right_rps)
 
-        data = str(100*int(round(self.left_rps,2))) + str(100*int(round(self.right_rps,2)))
+        data = bytes([int(100*round(self.left_rps,2))]) + \
+            bytes([int(100*round(self.right_rps,2))])
         tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcp.connect(dest)
-        tcp.send(data.encode())
-        _ = tcp.recv(1)
+        tcp.send(data)
+        time.sleep(0.01)
         tcp.close()
     
     def update_info(self, dt, pos):
@@ -65,8 +67,6 @@ class RealDifferentialDrive():
         self.x = pos[0]
         self.y = pos[1]
         self.yaw = pos[2]
-
-        print(self.yaw)
 
         self.x_hist.append(self.x)
         self.y_hist.append(self.y)
