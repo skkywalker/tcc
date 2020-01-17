@@ -98,7 +98,7 @@ class RealDifferentialDrive():
         # Calcula a velocidade a partir do que "sobra" de rps para o motor
         self.speed = self.max_rps*2*math.pi*self.wheel_radius-abs(self.omega)*self.width/2
 
-        self.send_wheel_speed(dest=('192.168.1.172', 8888))
+        self.send_wheel_speed(dest=('192.168.4.1', 8888))
 
     def lookahead(self, path, la):
         '''

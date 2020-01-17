@@ -21,7 +21,7 @@ notes = [DO, SOL, FA, MI, RE, DO2, SOL, FA, MI, RE, DO2, SOL, FA, MI, FA, RE]
 beats = [2,2,1/3,1/3,1/3,2,1,1/3,1/3,1/3,2,1,1/3,1/3,1/3,2]
 
 
-dest = ('192.168.1.181', 8888)
+dest = ('192.168.4.1', 8888)
 bps = 108/60
 
 for i,note in enumerate(notes):

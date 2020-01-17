@@ -46,4 +46,4 @@ while True:
             speed = (round(esquerda,2), round(direita,2)) # speed, omega
     if(last_speed != speed):
         last_speed = speed
-        send_wheel_speed(speed[0],speed[1],('192.168.1.181', 8888))
+        send_wheel_speed(speed[0],speed[1],('192.168.4.1', 8888))
