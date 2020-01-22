@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 def read_filter(name, mapa, lower, upper):
     ret = cv2.inRange(mapa, lower, upper)
-    ret = cv2.morphologyEx(ret, cv2.MORPH_OPEN, np.ones([5,5]))
-    ret = cv2.morphologyEx(ret, cv2.MORPH_CLOSE, np.ones([5,5]))
+    ret = cv2.morphologyEx(ret, cv2.MORPH_CLOSE, np.ones([4,4]))
+    ret = cv2.morphologyEx(ret, cv2.MORPH_OPEN, np.ones([4,4]))
     cv2.imshow(name, ret)
     ret = get_center(ret)
     return ret

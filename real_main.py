@@ -29,6 +29,8 @@ def load_map_setup():
 def get_frame():
     global camera, map_angle, map_tl, map_br
     ret, frame = camera.read()
+    if not ret:
+        return 1
     frame = cv2.resize(frame,(640,480))
     frame = rotateImage(frame,map_angle, map_tl)
     frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
@@ -98,7 +100,9 @@ def update():
 if __name__ == '__main__':
     _, map_angle, map_tl, map_br = load_map_setup()
     camera = cv2.VideoCapture(0)
-    map_img = get_frame()
+    map_img = 1
+    while(isinstance(map_img,int)):
+        map_img = get_frame()
 
     robot_features = {
         'width' : 0.18,

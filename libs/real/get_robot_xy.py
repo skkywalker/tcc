@@ -5,9 +5,9 @@ from ..get_center import get_center
 from .color import color
 
 def open_close(input_mask):
-    kernel = np.ones([5,5])
+    kernel = np.ones([4,4])
     mask = cv2.morphologyEx(input_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_ERODE, kernel, iterations=2)
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_ERODE, kernel, iterations=2)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
     return mask
 
@@ -51,5 +51,6 @@ def get_robot_xyyaw(frame, real_height):
     cv2.circle(framecp,(c2_x,c2_y),2,[255,0,0],3)
 
     cv2.circle(framecp,(Xi,Yi),3,[100,100,100],3)
+    cv2.imshow('robot_pos', framecp)
 
     return X, Y, yaw
