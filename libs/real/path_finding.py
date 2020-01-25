@@ -8,10 +8,10 @@ import cv2
 import time
 import matplotlib.pyplot as plt
 
-def read_filter(name, mapa, lower, upper):
+def read_filter(name, mapa, lower, upper, kernel_size):
     ret = cv2.inRange(mapa, lower, upper)
-    ret = cv2.morphologyEx(ret, cv2.MORPH_CLOSE, np.ones([4,4]))
-    ret = cv2.morphologyEx(ret, cv2.MORPH_OPEN, np.ones([4,4]))
+    ret = cv2.morphologyEx(ret, cv2.MORPH_CLOSE, np.ones([kernel_size,kernel_size]))
+    ret = cv2.morphologyEx(ret, cv2.MORPH_OPEN, np.ones([kernel_size,kernel_size]))
     cv2.imshow(name, ret)
     ret = get_center(ret)
     return ret
@@ -30,8 +30,8 @@ def path_find(im_map, rob_w, scale, iters, walls_only = 0):
 
     verm, am, verd = color('vermelho'),color('amarelo'),color('verde')
     # Encontra as posições iniciais e finais
-    pos_start = read_filter('pos_start', im_map, verm[0], verm[1])
-    finish = read_filter('finish', im_map, am[0], am[1])
+    pos_start = read_filter('pos_start', im_map, verm[0], verm[1],4)
+    finish = read_filter('finish', im_map, am[0], am[1],2)
     size = (len(im_map[0]),len(im_map))
 
     # Define um objeto mapa, que contém as funções para encontrar o caminho
@@ -39,8 +39,8 @@ def path_find(im_map, rob_w, scale, iters, walls_only = 0):
 
     # Cria uma máscara com as paredes (verde) e faz a dilatação
     walls = cv2.inRange(im_map, verd[0], verd[1])
-    walls = cv2.morphologyEx(walls, cv2.MORPH_OPEN, np.ones([5,5]))
-    walls = cv2.morphologyEx(walls, cv2.MORPH_CLOSE, np.ones([5,5]))
+    walls = cv2.morphologyEx(walls, cv2.MORPH_OPEN, np.ones([4,4]))
+    walls = cv2.morphologyEx(walls, cv2.MORPH_CLOSE, np.ones([4,4]))
     walls = cv2.dilate(walls, dilation_kernel, iterations=iters)
     cv2.imshow('walls',walls)
 

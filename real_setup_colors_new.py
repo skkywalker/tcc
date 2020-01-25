@@ -5,8 +5,6 @@ from libs.real.get_map import rotateImage
 
 
 def write_files(lower, upper, color_name):
-    print("Writing",lower,"to",'color_values/' + 'lower_' + color_name)
-    np.save('amarelo',lower)
     np.save('color_values/' + 'lower_' + color_name, lower)
     np.save('color_values/' + 'upper_' + color_name, upper)
 
@@ -31,13 +29,15 @@ def get_frame():
     frame = cv2.resize(frame,(640,480))
     frame = rotateImage(frame,map_angle, map_tl)
     frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
+    kernel = np.ones((5,5),np.float32)/25
+    frame = cv2.filter2D(frame,-1,kernel)
     return frame
 
 def new_info(current):
     global lower, upper
     for i in range(3):
-        lower[i] = int(0.95*current[i]) if current[i] < lower[i] else lower[i]
-        upper[i] = int(1.05*current[i]) if current[i] > upper[i] else upper[i]
+        lower[i] = int(current[i])-4 if current[i] < lower[i] else lower[i]
+        upper[i] = int(current[i])+4 if current[i] > upper[i] else upper[i]
 
 def colorSetup(event,x,y,flags,param):
     global lower,upper,on,control
@@ -70,8 +70,6 @@ control = 0
 color = sys.argv[1]
 while(True):
     frame = get_frame()
-    kernel = np.ones((5,5),np.float32)/25
-    frame = cv2.filter2D(frame,-1,kernel)
     framecp = frame.copy()
     c1 = cv2.inRange(frame, lower, upper)
     framecp[c1 > 0] = [0,100,100]
@@ -79,7 +77,6 @@ while(True):
     cv2.imshow('masks', framecp)
 
     if cv2.waitKey(1) == 27:
-        print("Setando",color,"como de",lower,"até",upper)
         write_files(lower,upper,color)
         break
 

@@ -34,7 +34,9 @@ def get_frame():
     frame = cv2.resize(frame,(640,480))
     frame = rotateImage(frame,map_angle, map_tl)
     frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
-    return frame
+    kernel = np.ones((5,5),np.float32)/25
+    frame = cv2.filter2D(frame,-1,kernel)
+    return frame 
 
 def update():
     global robot, map_img
@@ -53,10 +55,6 @@ def update():
     pos_im = (int(robot.x*im.shape[1]/real_map_width),im.shape[0]-int(robot.y*im.shape[0]/real_map_height))
     fin_im = (int(pos_im[0]+30*np.cos(robot.yaw)),int(pos_im[1]-30*np.sin(robot.yaw)))
     cv2.arrowedLine(im, pos_im, fin_im,[50,50,50],3)
-    cv2.imshow('robot', im)
-    if cv2.waitKey(30) & 0xff == 27:
-        return 1
-
 
     '''
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
@@ -80,23 +78,27 @@ def update():
     
     '''
     #Algoritmo Pure Pursuit
-    '''
+    
     # Encontra a distância lookahead >= 'la', a partir da posição mais próxima
     # 'closest' é a i-ésima posição em path mais próxima (ponto vermelho)
     # 'lookahead_i' é a i-ésima posição do lookahead
     # 'lookahead' é a coordenada da lookahead
-    closest, lookahead_i, lookahead = robot.lookahead(path, la=0.1)
+    closest, lookahead_i, lookahead = robot.lookahead(path_meters, la=0.05)
 
     # Plota os pontos lookahead e mais próximo
-    ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
-    ax1.plot([pathx[lookahead_i]],[pathy[lookahead_i]], marker='x', markersize=3, color="green")
-
+    #ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
+    #ax1.plot([pathx[lookahead_i]],[pathy[lookahead_i]], marker='x', markersize=3, color="green")
+    cv2.circle(im,path[closest],3,(255,0,0),3)
+    cv2.circle(im,path[lookahead_i],3,(0,255,0),3)
     # Calcula o novo omega, a partir das informações adquiridas
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
-    robot.update_speed(calculate_angle(current_pos,next_pos,lookahead),gain=3)
-    '''
+    robot.update_speed(calculate_angle(current_pos,next_pos,lookahead),gain=2)
+    cv2.imshow('robot', im)
+    if cv2.waitKey(30) & 0xff == 27:
+        return 1
     return 0
+    
 if __name__ == '__main__':
     _, map_angle, map_tl, map_br = load_map_setup()
     camera = cv2.VideoCapture(0)
@@ -108,9 +110,9 @@ if __name__ == '__main__':
         'width' : 0.18,
         'lenght' : 0.19,
         'wheel_radius' : 0.0315,
-        'max_rps' : 1.5
+        'max_rps' : 1.0
     }
-    real_map_width = 2.5 # em metros
+    real_map_width = 1 # em metros
 
     # Conta da altura, em metros, da imagem
     img_height, img_width = real_get_image_dims(map_img)
@@ -129,6 +131,10 @@ if __name__ == '__main__':
     #        real_map_height - real_map_height*path[i][1]/img_height)
     #    pathx.append(path[i][0])
     #    pathy.append(path[i][1])
+    path_meters = list()
+    for i in range(len(path)):
+        path_meters.append((path[i][0]*real_map_width/img_width, \
+            real_map_height - real_map_height*path[i][1]/img_height))
 
     # Criação do robô diferencial
     ret,frame = camera.read()

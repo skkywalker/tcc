@@ -23,13 +23,31 @@ def get_robot_xyyaw(frame, real_height):
     lower_1, upper_1 = color('azul')
     c1 = cv2.inRange(frame, lower_1, upper_1)
     c1 = open_close(c1)
-    c1_x, c1_y = get_center(c1)
+    cnts1, __ = cv2.findContours(c1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    useful_ctn = -1
+    for i,ctn in enumerate(cnts1):
+        if cv2.contourArea(ctn) >= 1500 and cv2.arcLength(ctn,True) >= 100:
+            useful_ctn = i
+            break
+    if useful_ctn == -1:
+        c1_x, c1_y = (0,0)
+    else:
+        c1_x, c1_y = get_center(cnts1[useful_ctn])
 
     # Segunda cor
     lower_2, upper_2 = color('vermelho')
     c2 = cv2.inRange(frame, lower_2, upper_2)
     c2 = open_close(c2)
-    c2_x, c2_y = get_center(c2)
+    cnts2, __ = cv2.findContours(c2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    useful_ctn = -1
+    for i,ctn in enumerate(cnts2):
+        if cv2.contourArea(ctn) >= 1500 and cv2.arcLength(ctn,True) >= 100:
+            useful_ctn = i
+            break
+    if useful_ctn == -1:
+        c2_x, c2_y = (0,0)
+    else:
+        c2_x, c2_y = get_center(cnts2[useful_ctn])
 
     # X e Y serão a média dos dois centros
     Xi = int(0.5*(c1_x + c2_x))
