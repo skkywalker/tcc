@@ -54,7 +54,17 @@ $$
 
 Com essas equações em mãos, utilizaremos um sistema de visão computacional para fechar uma malha de controle simples, onde as entradas são as velocidades linear e angular do carrinho, e a saída é a velocidade angular (maximizando a velocidade linear), de acordo com o caminho de referência encontrado pelo algoritmo.
 
-## Visão Computacional
+## Motor de passo
+
+hughes eletric motors and drivers
+
+Motores de passo são motores que funcionam muito bem com microcontroladores devido a sua característica única de rotacionar um ângulo conhecido a cada pulso de tensão recebido. <cite> Ou seja, provendo um certo número de pulsos para o motor (ou o seu driver) pode-se controlar a posição, ou mesmo a velocidade, do eixo em um sistema de controle aberto. <cite>
+
+						Esquemático motor de passo
+
+A rotação do eixo ocorre quando o rotor se alinha com o campos magnético induzido pelas bobinas nos dentes do estator. Em um motor de passo com duas fases, como é o caso do utilizado neste trabalho, temos quatro fios que dão acesso as 2 bobinas do estator. Assim sendo, cada pulso enviado ao driver troca a energização das bobinas, o que faz com que o rotor rotacione o equivalente a um pulso <cite>, o que no caso do nosso motor reflete em 1,8 grau.
+
+## Visão computacional
 
 gonzales e woods
 
@@ -83,9 +93,66 @@ A eletrônica que controla o robô tem como placa de controle a NodeMCU, que por
 
 ## Montagem do robô diferencial
 
+O robô foi desenvolvido com simplicidade e baixos custos em mente. A sua lista de componentes contém:
+
+### NodeMCU
+
+O NodeMCU (microchip ESP8266) é o microcontrolador do sistema. Das suas funcionalidades, são utilizadas 3 portas lógicas de saída para pulsos em cada driver de motor e para ativar o modo SLEEP, e o módulo WiFi que mantém um servidor TCP/IP para comunicação. A imagem a seguir ilustra a montagem do circuito.
+
+									Circuito
+
+### 2 x Motores de Passo
+
+Devido às necessidades do sistema de controle desenvolvido adiante, é necessário adequar a velocidade das rodas com grande exatidão. No caso desse tipo de motor, é possível definir quantos passos devem ser acionados por segundo (PPS), e sabendo que o motor tem 200 passos por revolução é trivial transformar a velocidade desejada, em rotação por segundo (RPS), para pps. O motor é um Nema 17 bifásico que possui torque de 3,5 kgf.cm acoplado a uma roda de 63mm de diâmetro. A velocidade dos motores é limitada por software em 1 (uma) rotação por segundo. <cite datasheet>
+
+### 2 x Drivers A4988
+
+Para controlar os motores de passo, utilizamos o driver A4988.
+
+									Pinout A4988
+
+Fora os pinos de alimentação, temos os pinos de direção, pulso e sleep. Como o robô anda apenas para frente (conforme restrição imposta na modelagem matemática), os pinos de direção foram ligados diretamente em Vcc e Ground. Os pinos de pulso foram ligados em saídas lógicas do microcontrolador, e os pinos de sleep a uma terceira saída lógica.
+
+O pino de sleep é importante uma vez que o consumo maior de corrente por parte dos motores de passo ocorre quando não há movimento. <cite> Dessa maneira, controla-se o pino de sleep pela NodeMCU, configurando o pino digital em *LOW* quando os motores estão ambos estacionários (note que a porta SLEEP é invertida). <cite datasheet>
+
+### Bateria NiMH
+
+Para energizar o carrinho, é utilizada uma bateria de níquel metal-hidreto, de 8,4 V e capacidade para 1200 mAh. Em conjunto com a bateria, um capacitor é utilizado para estabilizar a tensão de saída para prevenir danos aos motores e ao driver.
+
+### Carcaça
+
+A carcaça do sistema robótico é uma simples caixa de madeira de dimensões 220 x 120 x 50 (em milímetros). Nela estão a bateria e a protoboard com todos os eletrônicos conectados.
+
 ## Protocolo de comunicação
 
+O protocolo de comunicação da aplicação é pré-definido e de conhecimento do sistema de visão computacional e do microcontrolador embarcado no robô.
+
+A mensagem é bem simples e composta de dois bytes apenas. O primeiro byte reflete a velocidade da roda esquerda e o segundo byte da roda direita. Como existem 256 possibilidades para o valor de cada byte, foi definido que o valor enviado deve ser igual a 100 vezes a rotação desejada em RPS. Ou seja, para configurar a roda da esquerda a velocidade máxima (1 RPS) e a da direita a 50% da máxima (0,5 RPS), enviamos dois bytes equivalentes ao número 100 e ao número 50: `\x64\x32`.
+
+Por parte do microcontrolador, esse bytes são recebidos pela rede e atribuidos como *unsigned char*, para depois setarem a velocidade dos motores corretamente no programa.
+
 ## Pipeline do sistema de visão computacional
+
+A malha de controle para a velocidade das rodas é baseada inteiramente na identificação de cores. 
+
+							Imagem real exemplo
+
+A princípio, é definido no código:
+
+* Amarelo como ponto de chegada
+* Verde como as paredes (ou pontos inacessíveis)
+* Azul como a parte dianteira do robô
+* Vermelho como a parte traseira do robô
+
+No programa como um todo, as paredes e o ponto de chegada (verde e amarelo, respectivamente) são avaliados apenas na primeira etapa, para encontrar o caminho ideal. Com o caminho encontrado, a posição e angulação (*yaw*) do robô são constantemente avaliados e reajustados conforme necessário, segundo o algoritmo de controle. Isso se traduz em uma forte limitação do sistema: uma vez definido o caminho, mudanças na posição do ponto de chegada ou das paredes não muda em nada o movimento do robô, ou seja, a partir do momento que o robô começa a se movimentar, o ambiente deve permanecer estático.
+
+O robô faz o uso de duas cores para que seja possível identificar não somente a sua posição, mas também a sua angulação. Dessa forma, temos que a posição do robô $$(x,y,yaw)$$ é dada por (conforme definida na função `get_robot_xyyaw`):
+
+$$
+x = \frac{x_{azul} + x_{vermelho}}{2} \\
+y = \frac{y_{azul} + y_{vermelho}}{2} \\
+{yaw} = \tan{(\frac{y_{azul}-y_{vermelho}}{x_{azul}-x_{vermelho}})}
+$$
 
 # Desenvolvimento e resultados
 
