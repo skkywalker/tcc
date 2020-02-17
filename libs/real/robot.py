@@ -37,6 +37,14 @@ class RealDifferentialDrive():
         self.omega_hist = []
         self.dist_hist = []
 
+    def stop(self, dest):
+        data = bytes([0,0])
+        tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tcp.connect(dest)
+        tcp.send(data)
+        time.sleep(0.02)
+        tcp.close()
+
     def send_wheel_speed(self, dest):
         # Da modelagem de um Robô Diferencial
         self.left_speed = self.speed - self.omega*self.width/2
@@ -49,12 +57,12 @@ class RealDifferentialDrive():
         self.left_wheel_rps_hist.append(self.left_rps)
         self.right_wheel_rps_hist.append(self.right_rps)
 
-        data = bytes([int(100*round(self.left_rps,2))]) + \
-            bytes([int(100*round(self.right_rps,2))])
+        data = bytes([int(100*round(self.left_rps,2)), \
+            int(100*round(self.right_rps,2))])
         tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcp.connect(dest)
         tcp.send(data)
-        time.sleep(0.01)
+        time.sleep(0.02)
         tcp.close()
     
     def update_info(self, dt, pos):

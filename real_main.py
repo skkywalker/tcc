@@ -1,13 +1,10 @@
-from libs.real.get_map import get_map_clicking,rotateImage
+from libs.real.get_map import rotateImage
 from libs.real.path_finding import path_find
 from libs.real.robot import RealDifferentialDrive
 from libs.real.get_robot_xy import get_robot_xyyaw
-from libs.plot_arrow import plot_arrow
-from libs.custom_math import norm, absolute, calculate_angle, real_get_image_dims
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from libs.custom_math import norm, calculate_angle, real_get_image_dims
+import pickle
 import time
-import math
 import numpy as np
 import cv2
 
@@ -41,7 +38,7 @@ def get_frame():
 def update():
     global robot, map_img
     global init_time, last_updated
-    global path,pathx,pathy
+    global path,path_meters
     global real_map_width, real_map_height
 
     im = get_frame()
@@ -51,32 +48,30 @@ def update():
     # Operações de desenho no plot
     for i in path:
         im[(i[1], i[0])] = [0,0,0]
+    
+    hist = list()
+    for i in range(len(robot.x_hist)):
+        hist.append((int(robot.x_hist[i]*im.shape[1]/real_map_width),im.shape[0]-int(robot.y_hist[i]*im.shape[0]/real_map_height)))
+    for i in range(len(hist[:-1])):
+        cv2.line(im,hist[i],hist[i+1],(255,0,0),1)
 
     pos_im = (int(robot.x*im.shape[1]/real_map_width),im.shape[0]-int(robot.y*im.shape[0]/real_map_height))
     fin_im = (int(pos_im[0]+30*np.cos(robot.yaw)),int(pos_im[1]-30*np.sin(robot.yaw)))
     cv2.arrowedLine(im, pos_im, fin_im,[50,50,50],3)
 
-    '''
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
-    if(norm((robot.x, robot.y), path[-1]) < 0.02):
+    if(norm((robot.x, robot.y), path_meters[-1]) < 0.05):
         camera.release()
-        fig, axs = plt.subplots(5, 1, constrained_layout=True)
-        fig.suptitle('Resultados', fontsize=16)
-
-        plot_vars = [robot.right_wheel_rps_hist, robot.left_wheel_rps_hist, \
-            robot.speed_hist, robot.omega_hist, robot.dist_hist]
-        plot_titles = ["Roda Direita", "Roda Esquerda", "Velocidade", "Omega", "Desvio"]
-        plot_yaxis = ['rps', 'rps', 'm/s', 'rad/s', 'cm']
-
+        robot.stop(('192.168.4.1', 8888))
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
         for i in range(5):
-            axs[i].plot(plot_vars[i])
-            axs[i].set_title(plot_titles[i])
-            axs[i].set_ylabel(plot_yaxis[i])
-            axs[i].grid(True, axis='both')
-
-        plt.show()
+            cv2.waitKey(1)
+        with open('data.pkl', 'wb') as output:
+            pickle.dump(robot, output, pickle.HIGHEST_PROTOCOL)
+        return 1
+        
     
-    '''
     #Algoritmo Pure Pursuit
     
     # Encontra a distância lookahead >= 'la', a partir da posição mais próxima
@@ -86,8 +81,6 @@ def update():
     closest, lookahead_i, lookahead = robot.lookahead(path_meters, la=0.05)
 
     # Plota os pontos lookahead e mais próximo
-    #ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
-    #ax1.plot([pathx[lookahead_i]],[pathy[lookahead_i]], marker='x', markersize=3, color="green")
     cv2.circle(im,path[closest],3,(255,0,0),3)
     cv2.circle(im,path[lookahead_i],3,(0,255,0),3)
     # Calcula o novo omega, a partir das informações adquiridas
@@ -119,28 +112,17 @@ if __name__ == '__main__':
     real_map_height = img_height*real_map_width/img_width
 
     # Operações de transformação com o path
-    # 1- Transformar em metros
-    # 2- Criar pathy e pathx, zipando a lista
     path = path_find(map_img, robot_features['width'], real_map_width/img_width, iters=3)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    #pathx = []
-    #pathy = []
-    #for i in range(len(path)):
-    #    path[i] = (path[i][0]*real_map_width/img_width, \
-    #        real_map_height - real_map_height*path[i][1]/img_height)
-    #    pathx.append(path[i][0])
-    #    pathy.append(path[i][1])
+    # Referência do path em metros
     path_meters = list()
     for i in range(len(path)):
         path_meters.append((path[i][0]*real_map_width/img_width, \
             real_map_height - real_map_height*path[i][1]/img_height))
 
     # Criação do robô diferencial
-    ret,frame = camera.read()
-    frame = cv2.resize(frame,(640,480))
-    frame = rotateImage(frame,map_angle, map_tl)
-    frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
+    frame = get_frame()
     robot = RealDifferentialDrive(get_robot_xyyaw(frame,real_map_height), \
         robot_features['width'], \
         robot_features['lenght'], \

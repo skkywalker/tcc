@@ -22,19 +22,20 @@ def get_map_clicking():
     camera = cv2.VideoCapture(0)
     while(True):
         ret, frame = camera.read()
-        frame = cv2.resize(frame,(640,480))
-        if len(pos)==0:
-            text = 'Top left'
-        elif(len(pos)==1):
-            text = 'Top right'
-        else:
-            text = 'error'
-        if(len(pos) == 2):
-            break
-        cv2.putText(frame,text,(10,40),cv2.FONT_HERSHEY_SIMPLEX, 1, [0,255,0],2)
-        cv2.imshow('getMap',frame)
-        if cv2.waitKey(1) == 27:
-            break
+        if(ret):
+            frame = cv2.resize(frame,(640,480))
+            if len(pos)==0:
+                text = 'Top left'
+            elif(len(pos)==1):
+                text = 'Top right'
+            else:
+                text = 'error'
+            if(len(pos) == 2):
+                break
+            cv2.putText(frame,text,(10,40),cv2.FONT_HERSHEY_SIMPLEX, 1, [0,255,0],2)
+            cv2.imshow('getMap',frame)
+            if cv2.waitKey(1) == 27:
+                break
 
     tl,tr = pos
 
@@ -43,18 +44,19 @@ def get_map_clicking():
 
     while(True):
         ret, frame = camera.read()
-        frame = cv2.resize(frame,(640,480))
-        rotated_img = rotateImage(frame, rotate_angle, tl)
-        if len(pos)==0:
-            text = 'Bottom Right'
-        else:
-            text = 'error'
-        if(len(pos) == 1):
-            break
-        cv2.putText(rotated_img,text,(10,40),cv2.FONT_HERSHEY_SIMPLEX, 1, [0,255,0],2)
-        cv2.imshow('getMap',rotated_img)
-        if cv2.waitKey(1) == 27:
-            break
+        if(ret):
+            frame = cv2.resize(frame,(640,480))
+            rotated_img = rotateImage(frame, rotate_angle, tl)
+            if len(pos)==0:
+                text = 'Bottom Right'
+            else:
+                text = 'error'
+            if(len(pos) == 1):
+                break
+            cv2.putText(rotated_img,text,(10,40),cv2.FONT_HERSHEY_SIMPLEX, 1, [0,255,0],2)
+            cv2.imshow('getMap',rotated_img)
+            if cv2.waitKey(1) == 27:
+                break
 
     br = pos[0]
 
