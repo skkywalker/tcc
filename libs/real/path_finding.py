@@ -39,8 +39,8 @@ def path_find(im_map, rob_w, scale, iters, walls_only = 0):
 
     # Cria uma máscara com as paredes (verde) e faz a dilatação
     walls = cv2.inRange(im_map, verd[0], verd[1])
-    walls = cv2.morphologyEx(walls, cv2.MORPH_OPEN, np.ones([4,4]))
-    walls = cv2.morphologyEx(walls, cv2.MORPH_CLOSE, np.ones([4,4]))
+    walls = cv2.morphologyEx(walls, cv2.MORPH_OPEN, np.ones([10,10]))
+    walls = cv2.morphologyEx(walls, cv2.MORPH_CLOSE, np.ones([5,5]))
     walls = cv2.dilate(walls, dilation_kernel, iterations=iters)
     cv2.imshow('walls',walls)
 
