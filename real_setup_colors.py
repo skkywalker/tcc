@@ -1,94 +1,86 @@
 import cv2
 import numpy as np
 import sys
+from libs.real.get_map import rotateImage
 
-def organise_data(lista):
-    #lista = [ [[C1], [C2]], [[C1], [C2]], [[C1], [C2]] ]
-    #objetivo = [ [C1,C1,C1],[C2,C2,C2] ]
 
-    global color_names, color_location, samples
+def write_files(lower, upper, color_name):
+    np.save('color_values/' + 'lower_' + color_name, lower)
+    np.save('color_values/' + 'upper_' + color_name, upper)
 
-    tmp_list = [[] for i in color_names]
-    # tmp_list = [ [] ]
-    if (len(color_names) == 1):
-        tmp_list = lista[0]
-    for color in range(len(color_names)):
-        for samp in lista:
-            # samp = [[C1], [C2]]
-            tmp_list[color].append(samp[color][0])
+def load_map_setup():
+    map_img = cv2.imread('map_setup/map.png')
+    f = open('map_setup/rotate_angle', 'r')
+    map_angle = float(f.read())
+    f.close()
+    f = open('map_setup/br', 'r')
+    map_br = f.read()
+    map_br = tuple(map(int, map_br[1:-1].split(',')))
+    f.close()
+    f = open('map_setup/tl', 'r')
+    map_tl = f.read()
+    map_tl = tuple(map(int, map_tl[1:-1].split(',')))
+    f.close()
+    return map_img, map_angle, map_tl, map_br
 
-    return tmp_list
+def get_frame():
+    global camera, map_angle, map_tl, map_br
+    ret, frame = camera.read()
+    frame = cv2.resize(frame,(640,480))
+    frame = rotateImage(frame,map_angle, map_tl)
+    frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
+    kernel = np.ones((5,5),np.float32)/25
+    frame = cv2.filter2D(frame,-1,kernel)
+    return frame
 
-def write_files(lista, list_name):
-    b = np.array([])
-    g = np.array([])
-    r = np.array([])
-    for item in lista:
-        b = np.append(b,item[0])
-        g = np.append(g,item[1])
-        r = np.append(r,item[2])
-    lower = 0.95*np.array([b.min(),g.min(),r.min()])
-    upper = 1.05*np.array([b.max(),g.max(),r.max()])
-    lower = lower.astype(int)
-    upper = upper.astype(int)
-    np.save('color_values/' + 'lower_' + list_name, lower)
-    np.save('color_values/' + 'upper_' + list_name, upper)
-    print("Salvando", list_name, "como:")
-    print("Lower:", lower)
-    print("Upper:", upper)
-
+def new_info(current):
+    global lower, upper
+    for i in range(3):
+        lower[i] = int(current[i])-10 if current[i] < lower[i] else lower[i]
+        upper[i] = int(current[i])+10 if current[i] > upper[i] else upper[i]
 
 def colorSetup(event,x,y,flags,param):
-    global colors_tmp, colors, samples, color_names, color_location
-    if event == cv2.EVENT_LBUTTONDOWN:
-        B = frame[y,x,0]
-        G = frame[y,x,1]
-        R = frame[y,x,2]
-        colors_tmp.append([B,G,R])
-        if(len(colors_tmp) == samples):
-            colors.append(colors_tmp)
-            colors_tmp = list()
-
-        if(len(colors) == len(color_names)):
-            color_location.append(colors)
-            colors = list()
-            colors_tmp = list()
-            if(len(color_location) == locations):
-                tmp = organise_data(color_location)
-                for i, li in enumerate(tmp):
-                    write_files(li, color_names[i])
-                print("Okay!")
-                capture.release()
-                cv2.destroyAllWindows()
-                exit(0)
+    global lower,upper,on,control
+    B = frame[y,x,0]
+    G = frame[y,x,1]
+    R = frame[y,x,2]
+    if event == 1: # Mouse clicked
+        if control == 0:
+            lower = np.array([B,G,R])
+            upper = np.array([B,G,R])
+        on = 1
+        control = 1
+    elif event == 4: # mouse lifted
+        on = 0
+    elif event == 0 and on: # Dragging
+        current = [B,G,R]
+        new_info(current)
 
 cv2.namedWindow('colorSetup')
 cv2.setMouseCallback('colorSetup',colorSetup)
 
-capture = cv2.VideoCapture(0)
-colors = list()
-colors_tmp = list()
-color_location = list()
-if(len(sys.argv) == 1):
-    print("------------------------------")
-    print("Usage:")
-    print("------------------------------")
-    print("python foo.py [samples] [locations] [colors]")
-    print("------------------------------")
-    exit(1)
-samples = int(sys.argv[1])
-locations = int(sys.argv[2])
-color_names = sys.argv[3:]
+camera = cv2.VideoCapture(0)
 
+color_name = sys.argv[1]
+_, map_angle, map_tl, map_br = load_map_setup()
+lower = np.array([120,120,120])
+upper = np.array([120,120,120])
+on = 0
+control = 0
+color = sys.argv[1]
 while(True):
-
-    ret, frame = capture.read()
-    if ret:
-        cv2.putText(frame,color_names[len(colors)],(10,40),cv2.FONT_HERSHEY_SIMPLEX, 1, [0,255,0],2)
-        cv2.imshow('colorSetup', frame)
+    frame = get_frame()
+    framecp = frame.copy()
+    c1 = cv2.inRange(frame, lower, upper)
+    framecp[c1 > 0] = [0,100,100]
+    cv2.imshow('colorSetup', frame)
+    cv2.imshow('masks', framecp)
 
     if cv2.waitKey(1) == 27:
+        write_files(lower,upper,color)
         break
 
-capture.release()
+
+
+camera.release()
 cv2.destroyAllWindows()
