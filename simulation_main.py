@@ -1,12 +1,11 @@
 from libs.path_finding import path_find
 from libs.robot import DifferentialDrive
 from libs.plot_arrow import plot_arrow
-from libs.custom_math import norm, absolute, calculate_angle, get_image_dims
+from libs.custom_math import norm, calculate_angle, get_image_dims
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 import math
-import numpy as np
 import cv2
 
 def update(frame):
@@ -59,8 +58,8 @@ def update(frame):
     closest, lookahead_i, lookahead = robot.lookahead(path, la=0.1)
 
     # Plota os pontos lookahead e mais próximo
-    ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=3, color="red")
-    ax1.plot([pathx[lookahead_i]],[pathy[lookahead_i]], marker='x', markersize=3, color="green")
+    ax1.plot([pathx[closest]],[pathy[closest]], marker='o', markersize=5, color="red")
+    ax1.plot([pathx[lookahead_i]],[pathy[lookahead_i]], marker='x', markersize=5, color="green")
 
     # Calcula o novo omega, a partir das informações adquiridas
     current_pos = (robot.x, robot.y)
@@ -73,14 +72,14 @@ def update(frame):
     
 '''
 Programa principal
-'''
+''' 
 
 if __name__ == '__main__':
     # Definições básicas
     map_source = 'map-pics/test2.png'
     robot_features = {
         'width' : 0.12,
-        'lenght' : 0.22,
+        'lenght' : 0.18,
         'wheel_radius' : 0.0315,
         'max_rps' : 1.5
     }
