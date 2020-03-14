@@ -19,7 +19,8 @@ def path_find(img, rob_w, scale, iters, walls_only = 0):
 
     # Seta o tamanho da dilatação das parede, para levar em conta
     # a largura do carrinho. 'scale' equivale a relação metro/pixel
-    scale = math.floor((rob_w/2)/scale)
+    scale = int((rob_w/2)/scale)
+    if (scale % 2 == 0): scale += 1
     dilation_kernel = np.ones((scale,scale), np.uint8) 
 
     # Encontra as posições iniciais e finais

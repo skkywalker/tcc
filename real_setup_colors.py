@@ -26,12 +26,15 @@ def load_map_setup():
 def get_frame():
     global camera, map_angle, map_tl, map_br
     ret, frame = camera.read()
-    frame = cv2.resize(frame,(640,480))
-    frame = rotateImage(frame,map_angle, map_tl)
-    frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
-    kernel = np.ones((5,5),np.float32)/25
-    frame = cv2.filter2D(frame,-1,kernel)
-    return frame
+    if ret:
+        frame = cv2.resize(frame,(640,480))
+        frame = rotateImage(frame,map_angle, map_tl)
+        frame = frame[map_tl[1]:map_br[1],map_tl[0]:map_br[0]]
+        kernel = np.ones((5,5),np.float32)/25
+        frame = cv2.filter2D(frame,-1,kernel)
+        return frame
+    else:
+        return 1
 
 def new_info(current):
     global lower, upper
@@ -69,7 +72,9 @@ on = 0
 control = 0
 color = sys.argv[1]
 while(True):
-    frame = get_frame()
+    frame = 1
+    while (isinstance(frame,int)):
+        frame = get_frame()
     framecp = frame.copy()
     c1 = cv2.inRange(frame, lower, upper)
     framecp[c1 > 0] = [0,100,100]

@@ -44,6 +44,7 @@ def update(frame):
             axs[i].plot(plot_vars[i])
             axs[i].set_title(plot_titles[i])
             axs[i].set_ylabel(plot_yaxis[i])
+            axs[i].set_xlabel('frame')
             axs[i].grid(True, axis='both')
 
         plt.show()
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     # Operações de transformação com o path
     # 1- Transformar em metros
     # 2- Criar pathy e pathx, zipando a lista
-    path = path_find(map_source, robot_features['width'], real_map_width/img_width, iters=3)
+    path = path_find(map_source, robot_features['width'], real_map_width/img_width, iters=3, walls_only = 0)
     pathx = []
     pathy = []
     for i in range(len(path)):

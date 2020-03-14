@@ -14,6 +14,7 @@ def plot(robot):
         axs[i].plot(plot_vars[i])
         axs[i].set_title(plot_titles[i])
         axs[i].set_ylabel(plot_yaxis[i])
+        axs[i].set_xlabel('frame')
         axs[i].grid(True, axis='both')
 
     plt.show()

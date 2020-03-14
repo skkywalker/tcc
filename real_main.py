@@ -57,13 +57,13 @@ def update():
 
     pos_im = (int(robot.x*im.shape[1]/real_map_width),im.shape[0]-int(robot.y*im.shape[0]/real_map_height))
     fin_im = (int(pos_im[0]+30*np.cos(robot.yaw)),int(pos_im[1]-30*np.sin(robot.yaw)))
-    cv2.arrowedLine(im, pos_im, fin_im,[50,50,50],3)
+    cv2.arrowedLine(im, pos_im, fin_im,[150,150,150],1)
 
     # Se chegar no ponto final, parar a animação e mostrar infos relevantes
     if(norm((robot.x, robot.y), path_meters[-1]) < 0.05):
         camera.release()
         robot.stop(('192.168.4.1', 8888))
-        cv2.waitKey(1)
+        cv2.waitKey(0)
         cv2.destroyAllWindows()
         for i in range(5):
             cv2.waitKey(1)
@@ -81,8 +81,8 @@ def update():
     closest, lookahead_i, lookahead = robot.lookahead(path_meters, la=0.05)
 
     # Plota os pontos lookahead e mais próximo
-    cv2.circle(im,path[closest],3,(255,0,0),3)
-    cv2.circle(im,path[lookahead_i],3,(0,255,0),3)
+    cv2.circle(im,path[closest],3,(255,0,0),2)
+    cv2.circle(im,path[lookahead_i],3,(0,255,0),2)
     # Calcula o novo omega, a partir das informações adquiridas
     current_pos = (robot.x, robot.y)
     next_pos = robot.next_position()
